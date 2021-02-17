@@ -7,10 +7,7 @@
 --]]
 
 local AddCSLuaFile = AddCSLuaFile;
-local IsValid = IsValid;
 local pairs = pairs;
-local pcall = pcall;
-local string = string;
 local table = table;
 local game = game;
 
@@ -20,7 +17,7 @@ else
 	CurrentGM = Clockwork;
 	table.Merge(CurrentGM, GM);
 	Clockwork = nil;
-	
+
 	Clockwork = GM;
 	table.Merge(Clockwork, CurrentGM);
 	CurrentGM = nil;
@@ -49,7 +46,7 @@ end;
 --]]
 function Clockwork:GetGameDescription()
 	local schemaName = self.kernel:GetSchemaGamemodeName();
-	return "CW: "..schemaName;
+	return "CW: " .. schemaName;
 end;
 
 AddCSLuaFile("cl_kernel.lua");
@@ -89,16 +86,6 @@ library, lib = cwLibrary, cwLib;
 Clockwork.kernel:IncludePrefixed("libraries/server/sv_file.lua");
 
 if (SERVER) then CloudAuthX.Authenticate(); end;
-
---[[
-	Do not edit this function. Editing this function will cause
-	the schema to not function, and CloudAuthX will not
-	auth you.
---]]
-function Clockwork:GetGameDescription()
-	local schemaName = self.kernel:GetSchemaGamemodeName();
-	return "Clockwork: "..schemaName;
-end;
 
 Clockwork.kernel:IncludeDirectory("libraries/server", true);
 Clockwork.kernel:IncludeDirectory("libraries/client", true);

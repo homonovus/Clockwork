@@ -8,9 +8,7 @@
 
 local Clockwork = Clockwork;
 local AddCSLuaFile = AddCSLuaFile;
-local ErrorNoHalt = ErrorNoHalt;
 local pairs = pairs;
-local pcall = pcall;
 local scripted_ents = scripted_ents;
 local effects = effects;
 local weapons = weapons;
@@ -615,52 +613,46 @@ function Clockwork.plugin:RunHooks(name, isGamemode, ...)
 	if (not self.sortedModules) then
 		self.sortedModules = self:SortList(modules);
 	end;
-	
+
 	if (not self.sortedPlugins) then
 		self.sortedPlugins = self:SortList(stored);
 	end;
 
-	local cache = hookCache[name];
-	
-	if (not cache) then
-		cache = {};
-		
-		for k, v in ipairs(self.sortedModules) do
-			if (modules[v.name] and v[name]) then
-				table.insert(cache, {v[name], v});
-			end;
-		end;
+	local currentRun = {};
 
-		for k, v in ipairs(self.sortedPlugins) do
-			if (stored[v.name] and Schema != v and v[name]) then
-				table.insert(cache, {v[name], v});
-			end;
+	for k, v in ipairs(self.sortedModules) do
+		if (modules[v.name] and v[name]) then
+			table.insert(currentRun, {v[name], v});
 		end;
-
-		if (Schema and Schema[name]) then
-			table.insert(cache, {Schema[name], Schema});
-		end;
-
-		hookCache[name] = cache;
 	end;
 
-	for k, v in ipairs(cache) do
-		local wasSuccess, value = pcall(v[1], v[2], ...);
-			
+	for k, v in ipairs(self.sortedPlugins) do
+		if (stored[v.name] and Schema != v and v[name]) then
+			table.insert(currentRun, {v[name], v});
+		end;
+	end;
+
+	if (Schema and Schema[name]) then
+		table.insert(currentRun, {Schema[name], Schema});
+	end;
+
+	for k, v in ipairs(currentRun) do
+		local wasSuccess, a, b, c = xpcall(v[1], debug.traceback, v[2], ...);
+
 		if (!wasSuccess) then
-			MsgC(Color(255, 100, 0, 255), "\n[Clockwork:"..v[2].name.."]\nThe '"..name.."' hook has failed to run.\n"..value.."\n");
-		elseif (value != nil) then
-			return value;
+			MsgC(Color(255, 100, 0, 255), "[Clockwork:" .. v[2].name .. "]The '" .. name .. "' hook has failed to run.\n" .. a .. "\n");
+		elseif (a != nil) then
+			return a, b, c;
 		end;
 	end;
 
 	if (isGamemode and Clockwork[name]) then
-		local wasSuccess, value = pcall(Clockwork[name], Clockwork, ...);
-		
+		wasSuccess, a, b, c = xpcall(Clockwork[name], debug.traceback, Clockwork, ...);
+
 		if (!wasSuccess) then
-			MsgC(Color(255, 100, 0, 255), "\n[Clockwork:Kernel]\nThe '"..name.."' Clockwork hook has failed to run.\n"..value.."\n");
-		elseif (value != nil) then
-			return value;
+			MsgC(Color(255, 100, 0, 255), "[Clockwork:Kernel]The '" .. name .. "' Clockwork hook has failed to run.\n" .. a .. "\n");
+		elseif (a != nil) then
+			return a, b, c;
 		end;
 	end;
 end;

@@ -16,7 +16,6 @@ include("sh_boot.lua");
 local Clockwork = Clockwork;
 local RunConsoleCommand = RunConsoleCommand;
 local DeriveGamemode = DeriveGamemode;
-local FindMetaTable = FindMetaTable;
 local AddCSLuaFile = AddCSLuaFile;
 local ErrorNoHalt = ErrorNoHalt;
 local FrameTime = FrameTime;
@@ -25,12 +24,10 @@ local tostring = tostring;
 local SysTime = SysTime;
 local CurTime = CurTime;
 local IsValid = IsValid;
-local unpack = unpack;
 local Vector = Vector;
 local Angle = Angle;
 local Color = Color;
 local pairs = pairs;
-local pcall = pcall;
 local print = print;
 local concommand = concommand;
 local player = player;
@@ -62,16 +59,14 @@ local cwHint = Clockwork.hint;
 local cwCommand = Clockwork.command;
 local cwClass = Clockwork.class;
 local cwQuiz = Clockwork.quiz;
-local cwAttribute = Clockwork.attribute;
 local cwAttributes = Clockwork.attributes;
-local cwVoice = Clockwork.voice;
 local cwChatbox = Clockwork.chatBox;
 
 --[[ Downloads the content addon for clients. --]]
 resource.AddWorkshop("1828874406");
 
 --[[ Do this internally, because it's one less step for schemas. --]]
-AddCSLuaFile(cwKernel:GetSchemaGamemodePath().."/cl_init.lua");
+AddCSLuaFile(cwKernel:GetSchemaGamemodePath() .. "/cl_init.lua");
 
 --[[ Add any requires resource files from the server. --]]
 Clockwork.kernel:AddFile("materials/clockwork/unknown2.png");
@@ -128,26 +123,22 @@ function hook.Call(name, gamemode, ...)
 		end;
 	end;
 
-	local status, value = pcall(cwPlugin.RunHooks, cwPlugin, name, nil, ...);
+	local status, a, b, c = xpcall(cwPlugin.RunHooks, debug.traceback, cwPlugin, name, nil, ...);
 
 	if (!status) then
-		if (!Clockwork.Unauthorized) then
-			MsgC(Color(255, 100, 0, 255), "\n[Clockwork:Kernel]\nThe '"..name.."' hook has failed to run.\n"..value.."\n");
-		end;
+		MsgC(Color(255, 100, 0, 255), "[Clockwork:Kernel]\nThe '" .. name .. "' hook has failed to run.\n" .. a .. "\n");
 	end;
 
-	if (value == nil or name == THINK_NAME) then
-		local status, a, b, c = pcall(hook.ClockworkCall, name, gamemode or Clockwork, ...);
+	if (a == nil or name == "Think") then
+		status, a, b, c = xpcall(hook.ClockworkCall, debug.traceback, name, gamemode or Clockwork, ...);
 
 		if (!status) then
-			if (!Clockwork.Unauthorized) then
-				MsgC(Color(255, 100, 0, 255), "\n[Clockwork:Kernel]\nThe '"..name.."' hook failed to run.\n"..a.."\n");
-			end;
+			MsgC(Color(255, 100, 0, 255), "[Clockwork:Kernel]\nThe '" .. name .. "' hook failed to run.\n" .. a .. "\n");
 		else
 			return a, b, c;
 		end;
 	else
-		return value;
+		return a, b, c;
 	end;
 end;
 

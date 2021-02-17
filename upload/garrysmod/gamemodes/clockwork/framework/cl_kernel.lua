@@ -17,8 +17,6 @@ local RunConsoleCommand = RunConsoleCommand;
 local DrawColorModify = DrawColorModify;
 local DeriveGamemode = DeriveGamemode;
 local DrawMotionBlur = DrawMotionBlur;
-local FindMetaTable = FindMetaTable;
-local ErrorNoHalt = ErrorNoHalt;
 local CreateSound = CreateSound;
 local FrameTime = FrameTime;
 local tonumber = tonumber;
@@ -31,7 +29,6 @@ local string = string;
 local Entity = Entity;
 local unpack = unpack;
 local table = table;
-local pcall = pcall;
 local Vector = Vector;
 local Angle = Angle;
 local pairs = pairs;
@@ -96,23 +93,23 @@ function hook.Call(name, gamemode, ...)
 		Clockwork.Client = LocalPlayer();
 		cwClient = Clockwork.Client;
 	end;
-	
-	local status, value = pcall(cwPlugin.RunHooks, cwPlugin, name, nil, ...);
-	
+
+	local status, a, b, c = xpcall(cwPlugin.RunHooks, debug.traceback, cwPlugin, name, nil, ...);
+
 	if (!status) then
-		MsgC(Color(255, 100, 0, 255), "[Clockwork] The '"..name.."' hook failed to run.\n"..value.."\n"..value.."\n");
+		MsgC(Color(255, 100, 0, 255), "[Clockwork] The '" .. name .. "' hook failed to run.\n" .. a .. "\n");
 	end;
-	
-	if (value == nil) then
-		local status, a, b, c = pcall(hook.ClockworkCall, name, gamemode or Clockwork, ...);
-		
+
+	if (a == nil) then
+		status, a, b, c = xpcall(hook.ClockworkCall, debug.traceback, name, gamemode or Clockwork, ...);
+
 		if (!status) then
-			MsgC(Color(255, 100, 0, 255), "[Clockwork] The '"..name.."' hook failed to run.\n"..a.."\n");
+			MsgC(Color(255, 100, 0, 255), "[Clockwork] The '" .. name .. "' hook failed to run.\n" .. a .. "\n");
 		else
 			return a, b, c;
 		end;
 	else
-		return value;
+		return a, b, c;
 	end;
 end;
 
@@ -134,9 +131,9 @@ function AddWorldTip(entIndex, text, dieTime, position, entity)
 	end;
 end;
 
-timer.Destroy("HintSystem_OpeningMenu");
-timer.Destroy("HintSystem_Annoy1");
-timer.Destroy("HintSystem_Annoy2");
+timer.Remove("HintSystem_OpeningMenu");
+timer.Remove("HintSystem_Annoy1");
+timer.Remove("HintSystem_Annoy2");
 
 cwDatastream:Hook("RunCommand", function(data)
 	RunConsoleCommand(unpack(data));
