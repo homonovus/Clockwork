@@ -12,7 +12,6 @@
 	to access than global variables.
 --]]
 
-local UnPredictedCurTime = UnPredictedCurTime;
 local cwDisplayTyping = cwDisplayTyping;
 local playerGetAll = _player.GetAll;
 local cwConfig = Clockwork.config;
@@ -24,6 +23,8 @@ local pairs = pairs;
 
 -- Called to draw the text over each player's head if needed.
 function cwDisplayTyping:PostDrawTranslucentRenderables()
+	if not (LocalPlayer():IsValid() and LocalPlayer():HasInitialized()) then return end
+
 	for k, player in pairs(playerGetAll()) do
 		if (player:HasInitialized()) then
 			local large3D2DFont = cwOption:GetFont("large_3d_2d");
@@ -32,26 +33,23 @@ function cwDisplayTyping:PostDrawTranslucentRenderables()
 			local typing = player:GetSharedVar("Typing");
 			local plyPos = player:GetPos();
 			local clientPos = Clockwork.Client:GetPos();
-			
-			if (typing != 0 and player:GetMoveType() != MOVETYPE_NOCLIP and player:Alive()) then		
+
+			if (typing != 0 and player:GetMoveType() != MOVETYPE_NOCLIP and player:Alive()) then
 				local fadeDistance = 192;
-				
+
 				if (typing == TYPING_YELL or typing == TYPING_PERFORM) then
 					fadeDistance = cwConfig:Get("talk_radius"):Get() * 2;
 				elseif (typing == TYPING_WHISPER) then
 					fadeDistance = cwConfig:Get("talk_radius"):Get() / 3;
-					
+
 					if (fadeDistance > 80) then
 						fadeDistance = 80;
 					end;
 				else
 					fadeDistance = cwConfig:Get("talk_radius"):Get();
 				end;
-				
-				if ((plyPos and clientPos) and plyPos:Distance(clientPos) <= fadeDistance) then
-					local color = player:GetColor();	
-					local curTime = UnPredictedCurTime();
 
+				if ((plyPos and clientPos) and plyPos:Distance(clientPos) <= fadeDistance) then
 					if (player:GetMaterial() != "sprites/heatwave" and (a != 0 or player:IsRagdolled())) then
 						local alpha = cwKernel:CalculateAlphaFromDistance(fadeDistance, Clockwork.Client, player);
 						local position = cwPlugin:Call("GetPlayerTypingDisplayPosition", player);
@@ -159,17 +157,17 @@ end;
 -- Called when the chat box text has changed.
 function cwDisplayTyping:ChatBoxTextChanged(previousText, newText)
 	local prefix = cwConfig:Get("command_prefix"):Get();
-	
+
 	for k, v in pairs(self.typingCodes) do
-		if (self:DoesStartWithCommand(newText, prefix..k)) then
-			if (!self:DoesStartWithCommand(previousText, prefix..k)) then
+		if (self:DoesStartWithCommand(newText, prefix .. k)) then
+			if (!self:DoesStartWithCommand(previousText, prefix .. k)) then
 				RunConsoleCommand("cwTypingStart", v);
 			end;
-			
+
 			return;
 		end;
 	end;
-	
+
 	if (newText != "" and previousText != "") then
 		if (string.utf8len(newText) >= 4 and string.utf8len(previousText) < 4) then
 			RunConsoleCommand("cwTypingStart", "n");
