@@ -12,7 +12,7 @@ local COMMAND = Clockwork.command:New("CharGiveItem");
 
 COMMAND.tip = "CmdCharGiveItem";
 COMMAND.text = "CmdCharGiveItemDesc";
-COMMAND.access = "s";
+COMMAND.access = "a";
 COMMAND.arguments = 2;
 COMMAND.optionalArguments = 1;
 COMMAND.alias = {"PlyGiveItem"};
@@ -22,15 +22,15 @@ function COMMAND:OnRun(player, arguments)
 	if (Clockwork.player:HasFlags(player, "G")) then
 		local target = Clockwork.player:FindByID(arguments[1]);
 		local amount = tonumber(arguments[3]) or 1;
-		
+
 		if (target) then
 			local itemTable = Clockwork.item:FindByID(arguments[2]);
-		
+
 			if (itemTable and !itemTable.isBaseItem) then
 				for i = 1, amount do
 					local itemTable = Clockwork.item:CreateInstance(itemTable("uniqueID"));
 					local wasSuccess, fault = target:GiveItem(itemTable, true);
-			
+
 					if (!wasSuccess) then
 						Clockwork.player:Notify(player, fault);
 
@@ -39,7 +39,7 @@ function COMMAND:OnRun(player, arguments)
 				end;
 
 				Clockwork.player:Notify(player, {"YouHaveGivenItemAmount", target:Name(), amount, {itemTable("name")}});
-				
+
 				if (player != target) then
 					Clockwork.player:Notify(target, {"YouWereGivenItemAmount", player:Name(), amount, {itemTable("name")}});
 				end;
