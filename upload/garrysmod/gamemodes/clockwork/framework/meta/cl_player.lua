@@ -1,30 +1,13 @@
 --[[
-	© CloudSixteen.com do not share, re-distribute or modify
+	ï¿½ CloudSixteen.com do not share, re-distribute or modify
 	without permission of its author (kurozael@gmail.com).
 
 	Clockwork was created by Conna Wiles (also known as kurozael.)
 	http://cloudsixteen.com/license/clockwork.html
 --]]
 
-local cwDatastream = Clockwork.datastream;
-local cwCharacter = Clockwork.character;
-local cwCommand = Clockwork.command;
-local cwSetting = Clockwork.setting;
 local cwFaction = Clockwork.faction;
-local cwChatBox = Clockwork.chatBox;
-local cwEntity = Clockwork.entity;
-local cwOption = Clockwork.option;
-local cwConfig = Clockwork.config;
-local cwKernel = Clockwork.kernel;
-local cwPlugin = Clockwork.plugin;
-local cwTheme = Clockwork.theme;
-local cwEvent = Clockwork.event;
 local cwPly = Clockwork.player;
-local cwMenu = Clockwork.menu;
-local cwQuiz = Clockwork.quiz;
-local cwItem = Clockwork.item;
-local cwLimb = Clockwork.limb;
-
 local playerMeta = FindMetaTable("Player");
 
 playerMeta.SteamName = playerMeta.SteamName or playerMeta.Name;
@@ -32,7 +15,7 @@ playerMeta.SteamName = playerMeta.SteamName or playerMeta.Name;
 -- A function to get a player's name.
 function playerMeta:Name()
 	local name = self:GetSharedVar("Name");
-	
+
 	if (!name or name == "") then
 		return self:SteamName();
 	else
@@ -79,13 +62,19 @@ end;
 -- A function to get a player's forced animation.
 function playerMeta:GetForcedAnimation()
 	local forcedAnimation = self:GetSharedVar("ForceAnim");
-	
+
 	if (forcedAnimation != 0) then
 		return {
 			animation = forcedAnimation,
 		};
 	end;
 end;
+
+Clockwork.datastream:Hook("ForcedAnimResetCycle", function(data)
+	if ( !(IsValid(data.player) and data.player:IsPlayer()) ) then return end;
+
+	data.player:SetCycle(0);
+end);
 
 -- A function to get whether a player is ragdolled.
 function playerMeta:IsRagdolled(exception, entityless)

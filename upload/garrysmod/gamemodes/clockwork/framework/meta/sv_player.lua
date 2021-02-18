@@ -655,10 +655,10 @@ end;
 
 -- A function to create a player'a animation stop delay.
 function playerMeta:CreateAnimationStopDelay(delay)
-	cwKernel:CreateTimer("ForcedAnim"..self:UniqueID(), delay, 1, function()
+	cwKernel:CreateTimer("ForcedAnim" .. self:UniqueID(), delay, 1, function()
 		if (IsValid(self)) then
 			local forcedAnimation = self:GetForcedAnimation();
-			
+
 			if (forcedAnimation) then
 				self:SetForcedAnimation(false);
 			end;
@@ -670,49 +670,50 @@ end;
 function playerMeta:SetForcedAnimation(animation, delay, OnAnimate, OnFinish)
 	local forcedAnimation = self:GetForcedAnimation();
 	local sequence = nil;
-	
+
 	if (!animation) then
 		self:SetSharedVar("ForceAnim", 0);
 		self.cwForcedAnimation = nil;
-		
+
 		if (forcedAnimation and forcedAnimation.OnFinish) then
 			forcedAnimation.OnFinish(self);
 		end;
-		
+
 		return false;
 	end;
-	
+
 	local bIsPermanent = (!delay or delay == 0);
 	local bShouldPlay = (!forcedAnimation or forcedAnimation.delay != 0);
-	
+
 	if (bShouldPlay) then
 		if (type(animation) == "string") then
 			sequence = self:LookupSequence(animation);
 		else
 			sequence = self:SelectWeightedSequence(animation);
 		end;
-		
+
 		self.cwForcedAnimation = {
 			animation = animation,
 			OnAnimate = OnAnimate,
 			OnFinish = OnFinish,
 			delay = delay
 		};
-		
+
 		if (bIsPermanent) then
 			cwKernel:DestroyTimer(
-				"ForcedAnim"..self:UniqueID()
+				"ForcedAnim" .. self:UniqueID()
 			);
 		else
 			self:CreateAnimationStopDelay(delay);
 		end;
-		
+
 		self:SetSharedVar("ForceAnim", sequence);
-		
+		Clockwork.datastream:Start(nil, "ForcedAnimResetCycle", {player = self});
+
 		if (forcedAnimation and forcedAnimation.OnFinish) then
 			forcedAnimation.OnFinish(self);
 		end;
-		
+
 		return true;
 	end;
 end;

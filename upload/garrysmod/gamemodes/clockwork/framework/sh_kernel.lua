@@ -832,9 +832,9 @@ end;
 --]]
 function Clockwork:CalcMainActivity(player, velocity)
 	local model = player:GetModel();
-	
+
 	ANIMATION_PLAYER = player;
-	
+
 	local weapon = player:GetActiveWeapon();
 	local bIsRaised = Clockwork.player:GetWeaponRaised(player, true);
 	local animationAct = "stand";
@@ -843,19 +843,19 @@ function Clockwork:CalcMainActivity(player, velocity)
 
 	if (IsValid(weapon)) then
 		weaponHoldType = Clockwork.animation:GetWeaponHoldType(player, weapon);
-	
+
 		if (weaponHoldType) then
-			animationAct = animationAct.."_"..weaponHoldType;
+			animationAct = animationAct .. "_" .. weaponHoldType;
 		end;
 	end;
-	
+
 	if (bIsRaised) then
-		animationAct = animationAct.."_aim";
+		animationAct = animationAct .. "_aim";
 	end;
-	
-	player.CalcIdeal = Clockwork.animation:GetForModel(model, animationAct.."_idle");
+
+	player.CalcIdeal = Clockwork.animation:GetForModel(model, animationAct .. "_idle");
 	player.CalcSeqOverride = -1;
-	
+
 	if (!self:HandlePlayerDriving(player)
 	and !self:HandlePlayerJumping(player)
 	and !self:HandlePlayerDucking(player, velocity)
@@ -863,35 +863,35 @@ function Clockwork:CalcMainActivity(player, velocity)
 	and !self:HandlePlayerNoClipping(player, velocity)
 	and !self:HandlePlayerVaulting(player, velocity)) then
 		local velLength = velocity:Length2D();
-				
+
 		if (player:IsRunning() or player:IsJogging()) then
-			player.CalcIdeal = Clockwork.animation:GetForModel(model, animationAct.."_run");
+			player.CalcIdeal = Clockwork.animation:GetForModel(model, animationAct .. "_run");
 		elseif (velLength > 0.5) then
-			player.CalcIdeal = Clockwork.animation:GetForModel(model, animationAct.."_walk");
+			player.CalcIdeal = Clockwork.animation:GetForModel(model, animationAct .. "_walk");
 		end;
-		
+
 		if (CLIENT) then
 			player:SetIK(false);
 		end;
 	end;
-	
+
 	if (forcedAnimation) then
 		player.CalcSeqOverride = forcedAnimation.animation;
-		
+
 		if (forcedAnimation.OnAnimate) then
 			forcedAnimation.OnAnimate(player);
 			forcedAnimation.OnAnimate = nil;
 		end;
 	end;
-	
+
 	if (type(player.CalcSeqOverride) == "string") then
 		player.CalcSeqOverride = player:LookupSequence(player.CalcSeqOverride);
 	end;
-	
+
 	if (type(player.CalcIdeal) == "string") then
 		player.CalcSeqOverride = player:LookupSequence(player.CalcIdeal);
 	end;
-	
+
 	ANIMATION_PLAYER = nil;
 
 	local eyeAngles = player:EyeAngles();
