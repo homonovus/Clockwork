@@ -5351,34 +5351,36 @@ end;
 	@param {Unknown} Missing description for npc.
 	@returns {Unknown}
 --]]
-function Clockwork:PlayerSpawnedNPC(player, npc)
+function Clockwork:PlayerSpawnedNPC(ply, npc)
 	local faction;
 	local relation;
-	local uniqueID = player:UniqueID();
+	local uniqueID = ply:UniqueID();
 
 	STORED_RELATIONS = STORED_RELATIONS or {};
 	STORED_RELATIONS[uniqueID] = STORED_RELATIONS[uniqueID] or {};
 
-	for k, v in pairs(_player.GetAll()) do
+	for k, v in pairs(player.GetAll()) do
 		faction = cwFaction:FindByID(v:GetFaction());
+		if (!faction) then continue end
+
 		relation = faction.entRelationship;
 
-		if (istable(relation)) then
-			for k2, v2 in pairs(relation) do
-				if (k2 == npc:GetClass()) then
-					if (string.lower(v2) == "like") then
-						STORED_RELATIONS[uniqueID][k2] = STORED_RELATIONS[uniqueID][k2] or npc:Disposition(v);
-						npc:AddEntityRelationship(v, D_LI, 1);
-					elseif (string.lower(v2) == "fear") then
-						STORED_RELATIONS[uniqueID][k2] = STORED_RELATIONS[uniqueID][k2] or npc:Disposition(v);
-						npc:AddEntityRelationship(v, D_FR, 1);
-					elseif (string.lower(v2) == "hate") then
-						STORED_RELATIONS[uniqueID][k2] = STORED_RELATIONS[uniqueID][k2] or npc:Disposition(v);
-						npc:AddEntityRelationship(v, D_HT, 1);
-					else
-						ErrorNoHalt("Attempting to add relationship using invalid relation '"..v2.."' towards faction '"..faction.name.."'.\r\n");
-					end;
-				end;
+		if (!istable(relation)) then continue end
+
+		for k2, v2 in pairs(relation) do
+			if (k2 != npc:GetClass()) then continue end
+
+			if (string.lower(v2) == "like") then
+				STORED_RELATIONS[uniqueID][k2] = STORED_RELATIONS[uniqueID][k2] or npc:Disposition(v);
+				npc:AddEntityRelationship(v, D_LI, 1);
+			elseif (string.lower(v2) == "fear") then
+				STORED_RELATIONS[uniqueID][k2] = STORED_RELATIONS[uniqueID][k2] or npc:Disposition(v);
+				npc:AddEntityRelationship(v, D_FR, 1);
+			elseif (string.lower(v2) == "hate") then
+				STORED_RELATIONS[uniqueID][k2] = STORED_RELATIONS[uniqueID][k2] or npc:Disposition(v);
+				npc:AddEntityRelationship(v, D_HT, 1);
+			else
+				ErrorNoHalt("Attempting to add relationship using invalid relation '" .. v2 .. "' towards faction '" .. faction.name .. "'.\r\n");
 			end;
 		end;
 	end;
@@ -5391,7 +5393,7 @@ end;
 	@param {Table} The attribute table of the attribute being progressed.
 	@param {Number} The amount that is being progressed for editing purposes.
 --]]
-function Clockwork:OnAttributeProgress(player, attribute, amount)
+function Clockwork:OnAttributeProgress(ply, attribute, amount)
 	amount = amount * cwConfig:Get("scale_attribute_progress"):Get();
 end;
 
