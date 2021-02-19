@@ -877,7 +877,7 @@ function playerMeta:CanHoldSpace(space)
 	local inventorySpace = cwInventory:CalculateSpace(
 		self:GetInventory()
 	);
-	
+
 	if (inventorySpace + space > self:GetMaxSpace()) then
 		return false;
 	else

@@ -2988,9 +2988,9 @@ function Clockwork.player:SayRadio(player, text, check, noEavesdrop)
 	local listeners = {};
 	local canRadio = true;
 	local info = {listeners = {}, noEavesdrop = noEavesdrop, text = text};
-	
+
 	cwPlugin:Call("PlayerAdjustRadioInfo", player, info);
-	
+
 	for k, v in pairs(info.listeners) do
 		if (type(k) == "Player") then
 			listeners[k] = k;
@@ -2998,7 +2998,7 @@ function Clockwork.player:SayRadio(player, text, check, noEavesdrop)
 			listeners[v] = v;
 		end;
 	end;
-	
+
 	if (!info.noEavesdrop) then
 		for k, v in pairs(cwPlayer.GetAll()) do
 			if (v:HasInitialized() and !listeners[v]) then
@@ -3008,17 +3008,17 @@ function Clockwork.player:SayRadio(player, text, check, noEavesdrop)
 			end;
 		end;
 	end;
-	
+
 	if (check) then
 		canRadio = cwPlugin:Call("PlayerCanRadio", player, info.text, listeners, eavesdroppers);
 	end;
-	
+
 	if (canRadio) then
 		info = cwChatbox:Add(listeners, player, "radio", info.text);
-		
+
 		if (info and IsValid(info.speaker)) then
 			cwChatbox:Add(eavesdroppers, info.speaker, "radio_eavesdrop", info.text);
-			
+
 			cwPlugin:Call("PlayerRadioUsed", player, info.text, listeners, eavesdroppers);
 		end;
 	end;
@@ -4414,7 +4414,7 @@ function Clockwork.player:SetRagdollState(player, state, delay, decay, force, mu
 		elseif (cwPlugin:Call("PlayerCanRagdoll", player, state, delay, decay)) then
 			local velocity = player:GetVelocity() + (player:GetAimVector() * 128);
 			local ragdoll = ents.Create("prop_ragdoll");
-			
+
 			ragdoll:SetMaterial(player:GetMaterial());
 			ragdoll:SetAngles(player:GetAngles());
 			ragdoll:SetColor(player:GetColor());
@@ -4432,32 +4432,32 @@ function Clockwork.player:SetRagdollState(player, state, delay, decay, force, mu
 			player.cwRagdollTab.armor = player:Armor();
 			player.cwRagdollTab.delay = delay;
 			player.cwRagdollTab.decay = decay;
-			
+
 			if (!player:IsOnGround()) then
 				player.cwRagdollTab.immunity = 0;
 			end;
-			
+
 			if (IsValid(ragdoll)) then
 				local headIndex = ragdoll:LookupBone("ValveBiped.Bip01_Head1");
-				
+
 				ragdoll:SetCollisionGroup(COLLISION_GROUP_WEAPON);
-				
+
 				for i = 1, ragdoll:GetPhysicsObjectCount() do
 					local physicsObject = ragdoll:GetPhysicsObjectNum(i);
 					local boneIndex = ragdoll:TranslatePhysBoneToBone(i);
 					local position, angle = player:GetBonePosition(boneIndex);
-					
+
 					if (IsValid(physicsObject)) then
 						physicsObject:SetPos(position);
 						physicsObject:SetAngles(angle);
-						
+
 						if (!velocityCallback) then
 							if (boneIndex == headIndex) then
 								physicsObject:SetVelocity(velocity * 1.5);
 							else
 								physicsObject:SetVelocity(velocity);
 							end;
-							
+
 							if (force) then
 								if (boneIndex == headIndex) then
 									physicsObject:ApplyForceCenter(force * 1.5);

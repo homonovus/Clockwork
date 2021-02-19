@@ -9,7 +9,6 @@
 local Clockwork = Clockwork;
 local pairs = pairs;
 local string = string;
-local table = table;
 local type = type;
 
 --[[
@@ -47,11 +46,11 @@ function CLASS_TABLE:__call(varName, failSafe)
 	if (self.queryProxies[varName]) then
 		local bNotDefault = self.queryProxies[varName].bNotDefault;
 		local dataName = self.queryProxies[varName].dataName;
-		
+
 		if (type(dataName) != "function") then
 			local defaultValue = self.defaultData[dataName];
 			local currentValue = self.data[dataName];
-			
+
 			if (defaultValue != nil and currentValue != nil and (defaultValue != currentValue or !bNotDefault)) then
 				return self.data[dataName];
 			end;
@@ -62,8 +61,8 @@ function CLASS_TABLE:__call(varName, failSafe)
 			end;
 		end;
 	end;
-	
-	return (self[varName] != nil and self[varName] or failSafe);
+
+	return self[varName] != nil and self[varName] or failSafe;
 end;
 
 --[[
@@ -72,7 +71,7 @@ end;
 	@returns {String} The blueprint converted to a string.
 --]]
 function CLASS_TABLE:__tostring()
-	return "BLUEPRINT[" ..self("blueprintID").. "]";
+	return "BLUEPRINT[" .. self("blueprintID") .. "]";
 end;
 
 --[[
@@ -94,7 +93,7 @@ function CLASS_TABLE:FailedCraft(player) end;
 	@details A function to get whether the item is an instance.
 	@returns {Bool} Whether the blueprint is an instance or not.
 --]]
-function CLASS_TABLE:IsInstance() return (self("itemID") != 0); end;
+function CLASS_TABLE:IsInstance() return self("itemID") != 0; end;
 
 --[[
 	@codebase Shared
@@ -136,38 +135,38 @@ function Clockwork.crafting:Craft(player, blueprintTable)
 	if (type(blueprintTable) == "string") then
 		blueprintTable = Clockwork.crafting:FindByID(blueprintTable);
 	end;
-	
+
 	if (!blueprintTable or !blueprintTable:IsInstance()) then
 		debug.Trace();
-		
+
 		return false, {"ErrorCraftingNonInstance"};
 	end;
-	
+
 	local canCraft, message = Clockwork.crafting:CanCraft(player, blueprintTable);
-	
+
 	if (canCraft) then
 		if (message) then
 			message = {"SuccessfulCraftWithMsg", {blueprintTable("name")}, message};
 		else
 			message = {"SuccessfulCraft", {blueprintTable("name")}};
 		end;
-		
+
 		blueprintTable:OnCraft(player);
-		
+
 		Clockwork.crafting:TakeItems(player, blueprintTable);
 		Clockwork.crafting:GiveItems(player, blueprintTable);
-		
+
 		Clockwork.player:GiveCash(player, blueprintTable("giveCash"), "", true);
 		Clockwork.player:GiveCash(player, -blueprintTable("takeCash"), "", true);
-		
+
 		blueprintTable:PostCraft(player);
-		
+
 		Clockwork.player:Notify(player, message);
 	else
 		message = {"ErrorCraftingWithMsg", {blueprintTable("name")}, message};
-		
+
 		blueprintTable:FailedCraft(player);
-		
+
 		Clockwork.player:Notify(player, message);
 	end;
 end;
@@ -182,91 +181,75 @@ function Clockwork.crafting:CanCraft(player, blueprintTable)
 	if (!Clockwork.kernel:HasObjectAccess(player, blueprintTable)) then
 		return false, {"CraftErrorNotAllowed"};
 	end;
-	
+
 	local requirements = blueprintTable.itemRequirements;
-	
+
 	if (player:GetCash() < blueprintTable.takeCash) then
 		return false, {"YouCannotAffordToDoThat"};
 	end;
-	
+
 	local canCraft = false;
 	local itemsChecked = {};
-	
+
 	if (type(requirements) == "table") then
 		for k, v in pairs (requirements) do
 			if (type(k) == "number" and type(v) == "string") then
 				canCraft, itemsChecked[#itemsChecked + 1] = Clockwork.crafting:CheckCanCraft(player, v, 1);
-				
-				if (!canCraft) then
-					return false, {"MissingItemRequirements"};
-				end;
 			elseif (type(k) == "string" and type(v) == "number") then
 				canCraft, itemsChecked[#itemsChecked + 1] = Clockwork.crafting:CheckCanCraft(player, k, v);
-				
-				if (!canCraft) then
-					return false, {"MissingItemRequirements"};
-				end;
 			elseif (type(v) == "table") then
-				local amount, item = nil;
-				
 				if (type(v[1]) == "number") then
 					canCraft, itemsChecked[#itemsChecked + 1] = Clockwork.crafting:CheckCanCraft(player, v[2], v[1]);
-					
-					if (!canCraft) then
-						return false, {"MissingItemRequirements"};
-					end;
 				elseif (type(v[2]) == "number") then
 					canCraft, itemsChecked[#itemsChecked + 1] = Clockwork.crafting:CheckCanCraft(player, v[1], v[2]);
-					
-					if (!canCraft) then
-						return false, {"MissingItemRequirements"};
-					end;
 				end;
 			end;
+
+			if (!canCraft) then break end
 		end;
 	elseif (type(requirements) == "string") then
 		canCraft, itemsChecked[#itemsChecked + 1] = Clockwork.crafting:CheckCanCraft(player, requirements, 1);
-		
-		if (!canCraft) then
-			return false, {"MissingItemRequirements"};
-		end;
 	end;
-	
+
+	if (!canCraft) then
+		return false, {"MissingItemRequirements"};
+	end;
+
 	local itemsWeight = 0;
 	local itemsSpace = 0;
-	
+
 	for k, v in pairs (itemsChecked) do
 		local itemTable = Clockwork.item:FindByID(v);
-		
+
 		if (itemTable) then
 			itemsWeight = itemsWeight + itemTable("weight");
 		end;
 	end;
-	
+
 	for k, v in pairs (itemsChecked) do
 		local itemTable = Clockwork.item:FindByID(v);
-		
+
 		if (itemTable) then
 			itemsSpace = itemsSpace + itemTable("space");
 		end;
 	end;
-	
+
 	if (!player:CanHoldWeight(itemsWeight)) then
 		return false, {"YourInventoryFull"};
 	end;
-	
+
 	if (!player:CanHoldSpace(itemsSpace)) then
 		return false, {"YourInventoryFull"};
 	end;
-	
+
 	if (blueprintTable.CanCraft) then
-		local canCraft = blueprintTable:CanCraft(player);
+		canCraft = blueprintTable:CanCraft(player);
 
 		if (isbool(canCraft)) then
 			return canCraft;
 		end;
 	end;
-	
+
 	return true, "";
 end;
 
@@ -289,7 +272,7 @@ function Clockwork.crafting:CheckCanCraft(player, item, amount)
 			return false, item;
 		end;
 	end;
-	
+
 	return true, item;
 end;
 
@@ -303,14 +286,14 @@ end;
 --]]
 function Clockwork.crafting:CheckFormatRequirements(inventory, uniqueID, amount)
 	local requirement = nil;
-	
+
 	if (inventory and uniqueID and amount) then
 		local itemTable = Clockwork.item:FindByID(uniqueID);
-		
+
 		if (itemTable) then
 			local positiveColor = Clockwork.option:GetColor("positive_hint");
 			local negativeColor = Clockwork.option:GetColor("negative_hint");
-			
+
 			if (amount > 1) then
 				if (Clockwork.inventory:HasItemCountByID(inventory, uniqueID, amount)) then
 					requirement = Clockwork.kernel:MarkupTextWithColor(L("AmountOfThing", amount, L(itemTable("name"))), positiveColor);
@@ -326,7 +309,7 @@ function Clockwork.crafting:CheckFormatRequirements(inventory, uniqueID, amount)
 			end;
 		end;
 	end;
-	
+
 	return requirement;
 end;
 
@@ -341,11 +324,11 @@ function Clockwork.crafting:CheckGiveItems(player, item, amount)
 	if (player and item and amount) then
 		if (amount > 1) then
 			local itemsToGive = {};
-			
+
 			for i = 1, amount do
 				itemsToGive[#itemsToGive + 1] = item;
 			end;
-			
+
 			player:GiveItems(itemsToGive);
 		else
 			player:GiveItem(item);
@@ -396,19 +379,19 @@ function Clockwork.crafting:FindByID(identifier)
 		elseif (self.stored[identifier]) then
 			return self.stored[identifier];
 		end;
-		
+
 		local lowerName = string.lower(identifier);
 		local blueprintTable = nil;
-		
+
 		for k, v in pairs(self.stored) do
 			local blueprintName = v("name");
-			
+
 			if (string.find(string.lower(blueprintName), lowerName)
 			and (!blueprintTable or string.len(blueprintName) < string.len(blueprintTable("name")))) then
 				blueprintTable = v;
 			end;
 		end;
-		
+
 		return blueprintTable;
 	end;
 end;
@@ -423,7 +406,7 @@ end;
 function Clockwork.crafting:FormatRequirements(inventory, blueprintTable)
 	local itemRequirements = blueprintTable.itemRequirements;
 	local formattedRequirements = "";
-	
+
 	if (type(itemRequirements) == "table") then
 		for k, v in pairs (itemRequirements) do
 			if (type(k) == "number" and type(v) == "string") then
@@ -431,23 +414,21 @@ function Clockwork.crafting:FormatRequirements(inventory, blueprintTable)
 			elseif (type(k) == "string" and type(v) == "number") then
 				formattedRequirements = formattedRequirements .. Clockwork.crafting:CheckFormatRequirements(inventory, k, v);
 			elseif (type(v) == "table") then
-				local amount, item = nil;
-				
 				if (type(v[1]) == "number") then
 					formattedRequirements = formattedRequirements .. Clockwork.crafting:CheckFormatRequirements(inventory, v[2], v[1]);
 				elseif (type(v[2]) == "number") then
 					formattedRequirements = formattedRequirements .. Clockwork.crafting:CheckFormatRequirements(inventory, v[1], v[2]);
 				end;
 			end;
-			
+
 			formattedRequirements = formattedRequirements .. "\n";
 		end;
-		
+
 		formattedRequirements = string.TrimRight(formattedRequirements, "\n");
 	elseif (type(itemRequirements) == "string") then
 		formattedRequirements = formattedRequirements .. Clockwork.crafting:CheckFormatRequirements(inventory, itemRequirements, 1);
 	end;
-	
+
 	return formattedRequirements;
 end;
 
@@ -477,7 +458,7 @@ end;
 --]]
 function Clockwork.crafting:GiveItems(player, blueprintTable)
 	local giveItems = blueprintTable.giveItems;
-	
+
 	if (type(giveItems) == "table") then
 		for k, v in pairs (giveItems) do
 			if (type(k) == "number" and type(v) == "string") then
@@ -506,7 +487,7 @@ end;
 --]]
 function Clockwork.crafting:New(baseBlueprint, isBaseBlueprint)
 	local object = Clockwork.kernel:NewMetaTable(CLASS_TABLE);
-	
+
 	object.networkQueue = {};
 	object.networkData = {};
 	object.defaultData = {};
@@ -514,7 +495,7 @@ function Clockwork.crafting:New(baseBlueprint, isBaseBlueprint)
 	object.isBaseBlueprint = isBaseBlueprint;
 	object.baseBlueprint = baseBlueprint;
 	object.data = {};
-	
+
 	return object;
 end;
 
@@ -526,13 +507,13 @@ end;
 function Clockwork.crafting:Register(blueprintTable)
 	blueprintTable.uniqueID = string.lower(string.gsub(blueprintTable.uniqueID or string.gsub(blueprintTable.name, "%s", "_"), "['%.]", ""));
 	blueprintTable.index = Clockwork.kernel:GetShortCRC(blueprintTable.uniqueID);
-	
+
 	self.stored[blueprintTable.uniqueID] = blueprintTable;
 	self.buffer[blueprintTable.index] = blueprintTable;
-	
+
 	if (blueprintTable.model) then
 		util.PrecacheModel(blueprintTable.model);
-		
+
 		if (SERVER) then
 			Clockwork.kernel:AddFile(blueprintTable.model);
 		end;
@@ -547,18 +528,14 @@ end;
 --]]
 function Clockwork.crafting:TakeItems(player, blueprintTable)
 	local takeItems = blueprintTable.takeItems;
-	
+
 	if (type(takeItems) == "table") then
-		local itemsToTake = {};
-		
 		for k, v in pairs (takeItems) do
 			if (type(k) == "number" and type(v) == "string") then
 				Clockwork.crafting:CheckTakeItems(player, v, k);
 			elseif (type(k) == "string" and type(v) == "number") then
 				Clockwork.crafting:CheckTakeItems(player, k, v);
 			elseif (type(v) == "table") then
-				local amount, item = nil;
-				
 				if (type(v[1]) == "number") then
 					Clockwork.crafting:CheckTakeItems(player, v[2], v[1]);
 				elseif (type(v[2]) == "number") then
@@ -569,10 +546,6 @@ function Clockwork.crafting:TakeItems(player, blueprintTable)
 	elseif (type(takeItems) == "string") then
 		Clockwork.crafting:CheckTakeItems(player, takeItems, 1);
 	end;
-end;
-
-if (SERVER) then
-
 end;
 
 if (CLIENT) then
@@ -586,22 +559,22 @@ if (CLIENT) then
 	function Clockwork.crafting:GetIconInfo(blueprintTable)
 		local model = blueprintTable("iconModel", blueprintTable("model"));
 		local skin = blueprintTable("iconSkin", blueprintTable("skin"));
-		
+
 		if (blueprintTable.GetClientSideModel) then
 			model = blueprintTable:GetClientSideModel();
 		end;
-		
+
 		if (blueprintTable.GetClientSideSkin) then
 			skin = blueprintTable:GetClientSideSkin();
 		end;
-		
+
 		if (!model) then
 			model = "models/props_c17/oildrum001.mdl";
 		end;
-		
+
 		return model, skin;
 	end;
-	
+
 	--[[
 		@codebase Client
 		@details A function to get an item's markup tool tip.
@@ -614,39 +587,39 @@ if (CLIENT) then
 		local informationColor = Clockwork.option:GetColor("information");
 		local description = L(blueprintTable("description"));
 		local name = L(blueprintTable("name"));
-		
+
 		if (blueprintTable.GetClientSideName and blueprintTable:GetClientSideName()) then
 			name = blueprintTable:GetClientSideName();
 		end;
-		
+
 		if (blueprintTable.GetClientSideDescription and blueprintTable:GetClientSideDescription()) then
 			description = blueprintTable:GetClientSideDescription();
 		end;
-		
+
 		local displayInfo = {
 			itemTitle = nil,
 			name = name
 		};
-		
+
 		if (Callback) then
 			Callback(displayInfo);
 		end;
-		
+
 		local markupObject = Clockwork.theme:GetMarkupObject();
-		
+
 		local toolTipTitle = displayInfo.name;
 		local toolTipColor = informationColor;
-		
+
 		if (displayInfo.itemTitle) then
 			toolTipTitle = displayInfo.itemTitle;
 		end;
-		
+
 		if (blueprintTable("color")) then
 			toolTipColor = blueprintTable("color");
 		end;
-		
+
 		markupObject:Title(toolTipTitle, toolTipColor);
-		
+
 		if (displayInfo.toolTip) then
 			markupObject:Add(description);
 			markupObject:Title(L("Information"));
@@ -654,21 +627,21 @@ if (CLIENT) then
 		else
 			markupObject:Add(description);
 		end;
-		
+
 		if (blueprintTable("takeCash") > 0) then
 			markupObject:Title(L("Cost"), informationColor);
 			markupObject:Add(blueprintTable("takeCash"));
 		end;
-		
+
 		markupObject:Title(L("Requirements"), informationColor);
 		markupObject:Add(Clockwork.crafting:FormatRequirements(Clockwork.inventory.client, blueprintTable));
-		
+
 		markupObject:Title(L("Category"));
 		markupObject:Add(blueprintTable("category"));
-		
+
 		return markupObject:GetText();
 	end;
-	
+
 	Clockwork.datastream:Hook("BlueprintData", function(data)
 		Clockwork.item:CreateInstance(
 			data.index, data.blueprintID, data.data

@@ -54,11 +54,11 @@ function CLASS_TABLE:__call(varName, failSafe)
 	if (self.queryProxies[varName]) then
 		local bNotDefault = self.queryProxies[varName].bNotDefault;
 		local dataName = self.queryProxies[varName].dataName;
-		
+
 		if (type(dataName) != "function") then
 			local defaultValue = self.defaultData[dataName];
 			local currentValue = self.data[dataName];
-			
+
 			if (defaultValue != nil and currentValue != nil
 			and (defaultValue != currentValue or !bNotDefault)) then
 				return self.data[dataName];
@@ -70,7 +70,7 @@ function CLASS_TABLE:__call(varName, failSafe)
 			end;
 		end;
 	end;
-	
+
 	--[[
 		Check data first. We may be overriding this value
 		or simply want to return it instead.
@@ -78,13 +78,13 @@ function CLASS_TABLE:__call(varName, failSafe)
 	if (self.data[varName] != nil) then
 		return self.data[varName];
 	end;
-	
-	return (self[varName] != nil and self[varName] or failSafe);
+
+	return self[varName] != nil and self[varName] or failSafe;
 end;
 
 -- Called when the item is converted to a string.
 function CLASS_TABLE:__tostring()
-	return "ITEM["..self("itemID").."]";
+	return "ITEM[" .. self("itemID") .. "]";
 end;
 
 --[[
@@ -112,12 +112,12 @@ end;
 
 -- A function to get whether an item has the same data as another.
 function Clockwork.item:HasSameDataAs(itemTable)
-    return Clockwork.kernel:AreTablesEqual(self.data, itemTable.data);
+	return Clockwork.kernel:AreTablesEqual(self.data, itemTable.data);
 end;
 
 -- A function to get whether the item is an instance.
 function CLASS_TABLE:IsInstance()
-	return (self("itemID") != 0);
+	return self("itemID") != 0;
 end;
 
 --[[
@@ -148,7 +148,7 @@ end;
 -- A function to get whether the item is based from another.
 function CLASS_TABLE:IsBasedFrom(uniqueID)
 	local itemTable = self;
-	
+
 	if (itemTable("unique") == uniqueID) then
 		return true;
 	end;
@@ -157,12 +157,12 @@ function CLASS_TABLE:IsBasedFrom(uniqueID)
 		if (itemTable("baseItem") == uniqueID) then
 			return true;
 		end;
-		
+
 		itemTable = Clockwork.item:FindByID(
 			itemTable("baseItem")
 		);
 	end;
-	
+
 	return false;
 end;
 
@@ -173,7 +173,7 @@ end;
 
 -- A function to get whether the item can be ordered.
 function CLASS_TABLE:CanBeOrdered()
-	return (!self("isBaseItem") and self("business"));
+	return !self("isBaseItem") and self("business");
 end;
 
 -- A function to get data from the item.
@@ -186,7 +186,7 @@ function CLASS_TABLE:AddRecipe(...)
 	local arguments = {...};
 	local currentItem = nil;
 	local recipeTable = {ingredients = {}};
-	
+
 	for k, v in pairs(arguments) do
 		if (type(v) == "string") then
 			currentItem = v;
@@ -196,17 +196,17 @@ function CLASS_TABLE:AddRecipe(...)
 			end;
 		end;
 	end;
-	
+
 	self.recipes[#self.recipes + 1] = recipeTable;
-	
+
 	return recipeTable;
 end;
 
 -- A function to get whether two items are the same.
 function CLASS_TABLE:IsTheSameAs(itemTable)
 	if (itemTable) then
-		return (itemTable("uniqueID") == self("uniqueID")
-		and itemTable("itemID") == self("itemID"));
+		return itemTable("uniqueID") == self("uniqueID")
+		and itemTable("itemID") == self("itemID");
 	else
 		return false;
 	end;
@@ -214,7 +214,7 @@ end;
 
 -- A function to get whether data is networked.
 function CLASS_TABLE:IsDataNetworked(key)
-	return (self.networkData[key] == true);
+	return self.networkData[key] == true;
 end;
 
 if (SERVER) then
@@ -222,64 +222,63 @@ if (SERVER) then
 	function CLASS_TABLE:DeductFunds(player)
 		if (#self.recipes > 0) then
 			for k, v in pairs(self.recipes) do
-				if (Clockwork.kernel:HasObjectAccess(player, v)) then
-					local hasIngredients = true;
-					
+				if (!Clockwork.kernel:HasObjectAccess(player, v)) then continue end;
+
+				local hasIngredients = true;
+
+				for k2, v2 in pairs(v.ingredients) do
+					if (table.Count(player:GetItemsByID(k2)) < v2) then
+						hasIngredients = false;
+					end;
+				end;
+
+				if (hasIngredients) then
 					for k2, v2 in pairs(v.ingredients) do
-						if (table.Count(player:GetItemsByID(k2)) < v2) then
-							hasIngredients = false;
+						for i = 1, v2 do
+							player:TakeItemByID(k2);
 						end;
 					end;
-					
-					if (hasIngredients) then
-						for k2, v2 in pairs(v.ingredients) do
-							for i = 1, v2 do
-								player:TakeItemByID(k2);
-							end;
-						end;
-						
-						break;
-					end;
+
+					break;
 				end;
 			end;
 		end;
-		
+
 		if (self("cost") == 0) then
 			return;
 		end;
-		
+
 		Clockwork.player:GiveCash(player, -(self("cost") * self("batch")), {"AmountOfThing", self("batch"), {self("name")}});
 		Clockwork.kernel:PrintLog(LOGTYPE_MINOR, {"LogPlayerOrdered", player:Name(), self("batch"), {self("name")}});
 	end;
-	
+
 	-- A function to get whether a player can afford to order the item.
 	function CLASS_TABLE:CanPlayerAfford(player)
-		if (not Clockwork.player:CanAfford(player, self("cost") * self("batch"))) then
+		if (!Clockwork.player:CanAfford(player, self("cost") * self("batch"))) then
 			return false;
 		end;
-		
+
 		if (#self.recipes > 0) then
 			for k, v in pairs(self.recipes) do
-				if (Clockwork.kernel:HasObjectAccess(player, v)) then
-					local hasIngredients = true;
-					
-					for k2, v2 in pairs(v.ingredients) do
-						local itemList = player:GetItemsByID(k2);
-						
-						if (not itemList or table.Count(itemList) < v2) then
-							hasIngredients = false;
-						end;
-					end;
-					
-					if (hasIngredients) then
-						return true;
+				if (!Clockwork.kernel:HasObjectAccess(player, v)) then continue end;
+				local hasIngredients = true;
+
+				for k2, v2 in pairs(v.ingredients) do
+					local itemList = player:GetItemsByID(k2);
+
+					if (!itemList or table.Count(itemList) < v2) then
+						hasIngredients = false;
 					end;
 				end;
+
+				if (hasIngredients) then
+					return true;
+				end;
 			end;
-			
+
 			return false;
 		end;
-		
+
 		return true;
 	end;
 end;
@@ -294,7 +293,7 @@ if (SERVER) then
 		if (self:IsInstance() and self.data[dataName] != nil
 		and self.data[dataName] != value) then
 			self.data[dataName] = value;
-			
+
 			if (self:IsDataNetworked(dataName)) then
 				self.networkQueue[dataName] = value;
 				self:NetworkData();
@@ -304,12 +303,12 @@ if (SERVER) then
 
 	-- A function to network the item data.
 	function CLASS_TABLE:NetworkData()
-		local timerName = "NetworkItem"..self("itemID");
-		
+		local timerName = "NetworkItem" .. self("itemID");
+
 		if (Clockwork.kernel:TimerExists(timerName)) then
 			return;
 		end;
-		
+
 		Clockwork.kernel:CreateTimer(timerName, 1, 1, function()
 			Clockwork.item:SendUpdate(
 				self, self.networkQueue
@@ -358,26 +357,26 @@ function Clockwork.item:Register(itemTable)
 	itemTable.index = Clockwork.kernel:GetShortCRC(itemTable.uniqueID);
 	self.stored[itemTable.uniqueID] = itemTable;
 	self.buffer[itemTable.index] = itemTable;
-	
+
 	if (itemTable.model) then
 		util.PrecacheModel(itemTable.model);
-		
+
 		if (SERVER) then
 			Clockwork.kernel:AddFile(itemTable.model);
 		end;
 	end;
-	
+
 	if (itemTable.attachmentModel) then
 		util.PrecacheModel(itemTable.attachmentModel);
-		
+
 		if (SERVER) then
 			Clockwork.kernel:AddFile(itemTable.attachmentModel);
 		end;
 	end;
-	
+
 	if (itemTable.replacement) then
 		util.PrecacheModel(itemTable.replacement);
-		
+
 		if (SERVER) then
 			Clockwork.kernel:AddFile(itemTable.replacement);
 		end;
@@ -396,7 +395,7 @@ function Clockwork.item:IsWeapon(itemTable)
 	if (itemTable and itemTable:IsBasedFrom("weapon_base")) then
 		return true;
 	end;
-	
+
 	return false;
 end;
 
@@ -414,26 +413,26 @@ end;
 function Clockwork.item:CreateInstance(uniqueID, itemID, data)
 	local itemTable = Clockwork.item:FindByID(uniqueID);
 	if (itemID) then itemID = tonumber(itemID); end;
-	
+
 	if (itemTable) then
 		if (!itemID) then
 			itemID = self:GenerateID();
 		end;
-		
+
 		if (!self.instances[itemID]) then
 			self.instances[itemID] = table.Copy(itemTable);
 				self.instances[itemID].itemID = itemID;
 			setmetatable(self.instances[itemID], CLASS_TABLE);
 		end;
-		
+
 		if (data) then
 			table.Merge(self.instances[itemID].data, data);
 		end;
-		
+
 		if (self.instances[itemID].OnInstantiated) then
 			self.instances[itemID]:OnInstantiated();
 		end;
-		
+
 		return self.instances[itemID];
 	end;
 end;
@@ -459,13 +458,13 @@ function Clockwork.item:GetDefinition(itemTable, bNetworkData)
 		index = itemTable("index"),
 		data = {}
 	};
-	
+
 	if (bNetworkData) then
 		for k, v in pairs(itemTable("networkData")) do
 			definition.data[k] = itemTable:GetData(k);
 		end;
 	end;
-	
+
 	return definition;
 end;
 

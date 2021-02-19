@@ -173,7 +173,7 @@ end;
 --]]
 function Clockwork.inventory:GetItemCountByID(inventory, uniqueID)
 	local itemTable = Clockwork.item:FindByID(uniqueID);
-	
+
 	if (itemTable and inventory[itemTable("uniqueID")]) then
 		return table.Count(inventory[itemTable("uniqueID")]);
 	else
@@ -184,9 +184,9 @@ end;
 -- A function to get whether an inventory has an item by ID.
 function Clockwork.inventory:HasItemByID(inventory, uniqueID)
 	local itemTable = Clockwork.item:FindByID(uniqueID);
-	
+
 	if (itemTable) then
-		return (inventory[itemTable("uniqueID")] and table.Count(inventory[itemTable("uniqueID")]) > 0);
+		return inventory[itemTable("uniqueID")] and table.Count(inventory[itemTable("uniqueID")]) > 0;
 	else
 		return false;
 	end;
@@ -202,7 +202,7 @@ end;
 --]]
 function Clockwork.inventory:HasItemCountByID(inventory, uniqueID, amount)
 	local amountInInventory = self:GetItemCountByID(inventory, uniqueID);
-	
+
 	if (amountInInventory >= amount) then
 		return true;
 	else
@@ -213,20 +213,19 @@ end;
 -- A function to get whether an inventory item instance.
 function Clockwork.inventory:HasItemInstance(inventory, itemTable)
 	local uniqueID = itemTable("uniqueID");
-	return (inventory[uniqueID] and inventory[uniqueID][itemTable("itemID")] != nil);
+	return inventory[uniqueID] and inventory[uniqueID][itemTable("itemID")] != nil;
 end;
 
 -- A function to get whether an inventory is empty.
 function Clockwork.inventory:IsEmpty(inventory)
 	if (!inventory) then return true; end;
-	local bEmpty = true;
-	
+
 	for k, v in pairs(inventory) do
 		if (table.Count(v) > 0) then
 			return false;
 		end;
 	end;
-	
+
 	return true;
 end;
 
@@ -236,7 +235,7 @@ function Clockwork.inventory:RemoveInstance(inventory, itemTable)
 		debug.Trace();
 		return false;
 	end;
-	
+
 	if (inventory[itemTable("uniqueID")]) then
 		inventory[itemTable("uniqueID")][itemTable("itemID")] = nil;
 		return Clockwork.item:FindInstance(itemTable("itemID"));
@@ -247,11 +246,11 @@ end;
 function Clockwork.inventory:RemoveUniqueID(inventory, uniqueID, itemID)
 	local itemTable = Clockwork.item:FindByID(uniqueID);
 	if (itemID) then itemID = tonumber(itemID); end;
-	
+
 	if (itemTable and inventory[itemTable("uniqueID")]) then
 		if (!itemID) then
-			local firstValue = table.GetFirstValue(inventory[itemTable("uniqueID")]);
-			
+			local firstValue = next(inventory[itemTable("uniqueID")]);
+
 			if (firstValue) then
 				inventory[itemTable("uniqueID")][firstValue.itemID] = nil;
 				return Clockwork.item:FindInstance(firstValue.itemID);
@@ -268,24 +267,24 @@ function Clockwork.inventory:ToLoadable(inventory)
 
 	for k, v in pairs(inventory) do
 		local itemTable = Clockwork.item:FindByID(k);
-		
+
 		if (itemTable) then
 			local uniqueID = itemTable("uniqueID");
 
 			if (uniqueID != k) then
 				continue;
 			end;
-			
+
 			if (!newTable[uniqueID]) then
 				newTable[uniqueID] = {};
 			end;
-			
+
 			for k2, v2 in pairs(v) do
 				local itemID = tonumber(k2);
 				local instance = Clockwork.item:CreateInstance(
 					k, itemID, v2
 				);
-				
+
 				if (instance and !instance.OnLoaded
 				or instance:OnLoaded() != false) then
 					newTable[uniqueID][itemID] = instance;
@@ -293,46 +292,46 @@ function Clockwork.inventory:ToLoadable(inventory)
 			end;
 		end;
 	end;
-	
+
 	return newTable;
 end;
 
 -- A function to make an inventory saveable.
 function Clockwork.inventory:ToSaveable(inventory)
 	local newTable = {};
-	
+
 	for k, v in pairs(inventory) do
 		local itemTable = Clockwork.item:FindByID(k);
-		
-		if (itemTable) then
-			local defaultData = itemTable("defaultData");
-			local uniqueID = itemTable("uniqueID");
-			
-			if (!newTable[uniqueID]) then
-				newTable[uniqueID] = {};
-			end;
-			
-			for k2, v2 in pairs(v) do
-				if (type(v2) == "table"
-				and (v2.IsInstance and v2:IsInstance())) then
-					local newData = {};
-					local itemID = tostring(k2);
-					
-					for k3, v3 in pairs(v2("data")) do
-						if (defaultData[k3] != v3) then
-							newData[k3] = v3;
-						end;
-					end;
-					
-					if (!v2.OnSaved
-					or v2:OnSaved(newData) != false) then
-						newTable[uniqueID][itemID] = newData;
+
+		if (!itemTable) then continue end
+
+		local defaultData = itemTable("defaultData");
+		local uniqueID = itemTable("uniqueID");
+
+		if (!newTable[uniqueID]) then
+			newTable[uniqueID] = {};
+		end;
+
+		for k2, v2 in pairs(v) do
+			if (type(v2) == "table"
+			and (v2.IsInstance and v2:IsInstance())) then
+				local newData = {};
+				local itemID = tostring(k2);
+
+				for k3, v3 in pairs(v2("data")) do
+					if (defaultData[k3] != v3) then
+						newData[k3] = v3;
 					end;
 				end;
+
+				if (!v2.OnSaved
+				or v2:OnSaved(newData) != false) then
+					newTable[uniqueID][itemID] = newData;
+				end;
 			end;
-		end
+		end;
 	end;
-	
+
 	return newTable;
 end;
 
@@ -343,26 +342,26 @@ end;
 
 if (CLIENT) then
 	Clockwork.inventory.client = {};
-	
+
 	-- A function to get the local player's inventory.
 	function Clockwork.inventory:GetClient()
 		return self.client;
 	end;
-	
+
 	-- A function to get the inventory panel.
 	function Clockwork.inventory:GetPanel()
 		return self.panel;
 	end;
-	
+
 	-- A function to get whether the client has an item equipped.
 	function Clockwork.inventory:HasEquipped(itemTable)
 		if (itemTable.HasPlayerEquipped) then
-			return (itemTable:HasPlayerEquipped(Clockwork.Client) == true);
+			return itemTable:HasPlayerEquipped(Clockwork.Client) == true;
 		end;
-		
+
 		return false;
 	end;
-	
+
 	-- A function to rebuild the local player's inventory.
 	function Clockwork.inventory:Rebuild(bForceRebuild)
 		if (Clockwork.menu:IsPanelActive(self:GetPanel()) or bForceRebuild) then
@@ -373,7 +372,7 @@ if (CLIENT) then
 			end);
 		end;
 	end;
-	
+
 	Clockwork.datastream:Hook("InvClear", function(data)
 		Clockwork.inventory.client = {};
 		Clockwork.inventory:Rebuild();
@@ -383,24 +382,24 @@ if (CLIENT) then
 		local itemTable = Clockwork.item:CreateInstance(
 			data.index, data.itemID, data.data
 		);
-		
+
 		Clockwork.inventory:AddInstance(
 			Clockwork.inventory.client, itemTable
 		);
-		
+
 		Clockwork.inventory:Rebuild();
 		Clockwork.plugin:Call("PlayerItemGiven", itemTable);
 	end);
-	
+
 	Clockwork.datastream:Hook("InvNetwork", function(data)
 		local itemTable = Clockwork.item:FindInstance(data.itemID);
-		
+
 		if (itemTable) then
 			local bHasEquipped = Clockwork.inventory:HasEquipped(itemTable);
-			
+
 			table.Merge(itemTable("data"), data.data);
 			Clockwork.plugin:Call("ItemNetworkDataUpdated", itemTable, data.data);
-			
+
 			if (bHasEquipped != Clockwork.inventory:HasEquipped(itemTable)) then
 				Clockwork.inventory:Rebuild(
 					Clockwork.menu:GetOpen()
@@ -408,37 +407,37 @@ if (CLIENT) then
 			end;
 		end;
 	end);
-	
+
 	Clockwork.datastream:Hook("InvRebuild", function(data)
 		Clockwork.inventory:Rebuild();
 	end);
-	
+
 	Clockwork.datastream:Hook("InvTake", function(data)
 		local itemTable = Clockwork.inventory:FindItemByID(
 			Clockwork.inventory.client, data[1], data[2]
 		);
-		
+
 		if (itemTable) then
 			Clockwork.inventory:RemoveInstance(
 				Clockwork.inventory.client, itemTable
 			);
-			
+
 			Clockwork.inventory:Rebuild();
 			Clockwork.plugin:Call("PlayerItemTaken", itemTable);
 		end;
 	end);
-	
+
 	Clockwork.datastream:Hook("InvUpdate", function(data)
 		for k, v in pairs(data) do
 			local itemTable = Clockwork.item:CreateInstance(
 				v.index, v.itemID, v.data
 			);
-			
+
 			Clockwork.inventory:AddInstance(
 				Clockwork.inventory.client, itemTable
 			);
 		end;
-		
+
 		Clockwork.inventory:Rebuild();
 	end);
 else
