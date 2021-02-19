@@ -5799,24 +5799,24 @@ Clockwork.kernel:IncludePrefixed("meta/sv_player.lua");
 
 concommand.Add("gm_save", function(ply) end);
 
-concommand.Add("cwStatus", function(player, command, arguments)
+concommand.Add("cwStatus", function(ply, command, arguments)
 	local plyTable = player.GetAll();
 
-	if (IsValid(player)) then
-		if (cwPly:IsAdmin(player)) then
-			player:PrintMessage(2, "# User ID | Name | Steam Name | Steam ID | IP Address");
+	if (IsValid(ply)) then
+		if (cwPly:IsAdmin(ply)) then
+			ply:PrintMessage(2, "# User ID | Name | Steam Name | Steam ID | IP Address");
 
 			for k, v in pairs(plyTable) do
 				if (v:HasInitialized()) then
 					local status = cwPlugin:Call("PlayerCanSeeStatus", player, v);
 
 					if (status) then
-						player:PrintMessage(2, status);
+						ply:PrintMessage(2, status);
 					end;
 				end;
 			end;
 		else
-			player:PrintMessage(2, "You do not have access to this command, "..player:Name()..".");
+			ply:PrintMessage(2, "You do not have access to this command, "..player:Name()..".");
 		end;
 	else
 		print("# User ID | Name | Steam Name | Steam ID | IP Address");
