@@ -929,10 +929,17 @@ function Clockwork:SetupMove(player, moveData)
 				player.cwDrunkSwerve = 1;
 			end;
 		end;
-	else
-		if (player:GetForcedAnimation()) then
-			moveData:SetVelocity(vector_origin)
-		end;
+	end;
+
+	-- stop players from clipping through walls
+	-- and stop the hl2rp citizen space program
+	if (player:GetForcedAnimation()) then
+		local oldVel = moveData:GetVelocity();
+		oldVel.x = 0;
+		oldVel.y = 0;
+		oldVel.z = math.min(oldVel.z, player:GetJumpPower())
+
+		moveData:SetVelocity(oldVel)
 	end;
 end;
 
