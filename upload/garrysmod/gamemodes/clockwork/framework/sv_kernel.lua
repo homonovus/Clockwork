@@ -1159,33 +1159,6 @@ end;
 
 --[[
 	@codebase Server
-	@details Called when a player's move data is set up.
-	@param {Unknown} Missing description for player.
-	@param {Unknown} Missing description for moveData.
-	@returns {Unknown}
---]]
-function Clockwork:SetupMove(player, moveData)
-	if (player:Alive() and !player:IsRagdolled()) then
-		local frameTime = FrameTime();
-		local isDrunk = cwPly:GetDrunk(player);
-		local curTime = CurTime();
-
-		if (isDrunk and player.cwDrunkSwerve) then
-			player.cwDrunkSwerve = math.Clamp(player.cwDrunkSwerve + frameTime, 0, math.min(isDrunk * 2, 16));
-
-			moveData:SetMoveAngles(moveData:GetMoveAngles() + Angle(0, math.cos(curTime) * player.cwDrunkSwerve, 0));
-		elseif (player.cwDrunkSwerve and player.cwDrunkSwerve > 1) then
-			player.cwDrunkSwerve = math.max(player.cwDrunkSwerve - frameTime, 0);
-
-			moveData:SetMoveAngles(moveData:GetMoveAngles() + Angle(0, math.cos(curTime) * player.cwDrunkSwerve, 0));
-		elseif (player.cwDrunkSwerve != 1) then
-			player.cwDrunkSwerve = 1;
-		end;
-	end;
-end;
-
---[[
-	@codebase Server
 	@details Called when a player throws a punch.
 	@returns {Unknown}
 --]]
