@@ -4421,8 +4421,13 @@ function Clockwork.player:SetRagdollState(player, state, delay, decay, force, mu
 			ragdoll:SetModel(player:GetModel());
 			ragdoll:SetSkin(player:GetSkin());
 			ragdoll:SetPos(player:GetPos());
+
+			for i = 0, player:GetBodygroupCount() - 1 do
+				ragdoll:SetBodygroup(i, player:GetBodygroup(i))
+			end
+
 			ragdoll:Spawn();
-			
+
 			player.cwRagdollTab = {};
 			player.cwRagdollTab.eyeAngles = player:EyeAngles();
 			player.cwRagdollTab.immunity = CurTime() + cwCfg:Get("ragdoll_immunity_time"):Get();
