@@ -240,7 +240,12 @@ if (SERVER) then
 				if (player:HasInitialized()) then
 					if !(Clockwork.plugin:Call("PlayerCanUseCommand", player, commandTable, arguments)) then return end
 
+					if (!player.cwNextCommandTime) then
+						player.cwNextCommandTime = 0;
+					end;
 
+					-- ratelimit
+					if player.cwNextCommandTime > CurTime() then return end
 
 					if (#arguments >= commandTable.arguments) then
 						if (Clockwork.command:HasAccess(player, commandTable)) then
@@ -287,6 +292,8 @@ if (SERVER) then
 								end;
 
 								if (wasSuccess) then
+									player.cwNextCommandTime = CurTime() + 0.1
+
 									if (table.concat(arguments, " ") != "") then
 										Clockwork.kernel:PrintLog(LOGTYPE_GENERIC, {"LogPlayerUsedCommandArgs", player:Name(), commandPrefix .. commandTable.name, table.concat(arguments, " ")});
 									else
