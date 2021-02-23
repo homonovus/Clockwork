@@ -911,35 +911,21 @@ end;
 	@returns {Unknown}
 --]]
 function Clockwork:SetupMove(player, moveData)
-	if (SERVER) then
-		if (player:Alive() and !player:IsRagdolled()) then
-			local frameTime = FrameTime();
-			local isDrunk = cwPly:GetDrunk(player);
-			local curTime = CurTime();
+	if SERVER and (player:Alive() and !player:IsRagdolled()) then
+		local isDrunk = Clockwork.player:GetDrunk(player);
+		local curTime = CurTime();
 
-			if (isDrunk and player.cwDrunkSwerve) then
-				player.cwDrunkSwerve = math.Clamp(player.cwDrunkSwerve + frameTime, 0, math.min(isDrunk * 2, 16));
+		if (isDrunk and player.cwDrunkSwerve) then
+			player.cwDrunkSwerve = math.Clamp(player.cwDrunkSwerve + FrameTime(), 0, math.min(isDrunk * 2, 16));
 
-				moveData:SetMoveAngles(moveData:GetMoveAngles() + Angle(0, math.cos(curTime) * player.cwDrunkSwerve, 0));
-			elseif (player.cwDrunkSwerve and player.cwDrunkSwerve > 1) then
-				player.cwDrunkSwerve = math.max(player.cwDrunkSwerve - frameTime, 0);
+			moveData:SetMoveAngles(moveData:GetMoveAngles() + Angle(0, math.cos(curTime) * player.cwDrunkSwerve, 0));
+		elseif (player.cwDrunkSwerve and player.cwDrunkSwerve > 1) then
+			player.cwDrunkSwerve = math.max(player.cwDrunkSwerve - FrameTime(), 0);
 
-				moveData:SetMoveAngles(moveData:GetMoveAngles() + Angle(0, math.cos(curTime) * player.cwDrunkSwerve, 0));
-			elseif (player.cwDrunkSwerve != 1) then
-				player.cwDrunkSwerve = 1;
-			end;
+			moveData:SetMoveAngles(moveData:GetMoveAngles() + Angle(0, math.cos(curTime) * player.cwDrunkSwerve, 0));
+		elseif (player.cwDrunkSwerve ~= 1) then
+			player.cwDrunkSwerve = 1;
 		end;
-	end;
-
-	-- stop players from clipping through walls
-	-- and stop the hl2rp citizen space program
-	if (player:GetForcedAnimation()) then
-		local oldVel = moveData:GetVelocity();
-		oldVel.x = 0;
-		oldVel.y = 0;
-		oldVel.z = math.min(oldVel.z, player:GetJumpPower())
-
-		moveData:SetVelocity(oldVel)
 	end;
 end;
 

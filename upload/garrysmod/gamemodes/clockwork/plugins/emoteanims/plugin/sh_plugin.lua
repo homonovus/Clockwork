@@ -33,6 +33,15 @@ end;
 function cwEmoteAnims:Move(player, moveData)
 	if (self:IsPlayerInStance(player)) then
 		player:SetAngles(player:GetSharedVar("StanceAng"));
+
+		-- stop players from clipping through walls
+		-- and stop the hl2rp citizen space program
+		local oldVel = moveData:GetVelocity();
+		oldVel.x = 0;
+		oldVel.y = 0;
+		oldVel.z = math.min(oldVel.z, player:GetJumpPower())
+
+		moveData:SetVelocity(oldVel)
 		return true;
 	end;
 end;
