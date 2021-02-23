@@ -515,6 +515,7 @@ end;
 	@returns {Unknown}
 --]]
 function Clockwork.kernel:Serialize(tableToSerialize)
+	local wasSuccess, value = xpcall(von.serialize, debug.traceback, tableToSerialize);
 
 	if (!wasSuccess) then
 		print(value);
@@ -531,6 +532,7 @@ end;
 	@returns {Unknown}
 --]]
 function Clockwork.kernel:Deserialize(stringToDeserialize)
+	local wasSuccess, value = xpcall(von.deserialize, debug.traceback, stringToDeserialize);
 
 	if (!wasSuccess) then
 		print(value);
