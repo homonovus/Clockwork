@@ -1910,6 +1910,10 @@ if (SERVER) then
 
 		ServerLog(text .. "\n");
 
+		-- why isn't this already output to server console???
+		-- why only to file
+		print(text)
+
 		Clockwork.plugin:Call("ClockworkLog", text, unixTime);
 	end;
 else
