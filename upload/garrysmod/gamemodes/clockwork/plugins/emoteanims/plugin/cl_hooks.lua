@@ -27,19 +27,19 @@ function cwEmoteAnims:CalcViewAdjustTable(view)
 		local headBone = "ValveBiped.Bip01_Head1";
 		local position = Clockwork.Client:EyePos();
 		local angles = Clockwork.Client:GetSharedVar("StanceAng"):Forward();
-		
+
 		if (string.find(Clockwork.Client:GetModel(), "vortigaunt")) then
 			headBone = "ValveBiped.Head";
 		end;
-		
+
 		if (idleStance) then
 			local bonePosition = Clockwork.Client:GetBonePosition(Clockwork.Client:LookupBone(headBone));
-			
+
 			if (bonePosition) then
 				position = bonePosition + Vector(0, 0, 8);
 			end;
 		end;
-		
+
 		if (defaultOrigin) then
 			if (idleStance) then
 				traceLine = util.TraceLine({
@@ -54,10 +54,10 @@ function cwEmoteAnims:CalcViewAdjustTable(view)
 					filter = Clockwork.Client
 				});
 			end;
-			
+
 			if (traceLine.Hit) then
 				view.origin = traceLine.HitPos + (angles * 4);
-				
+
 				if (view.origin:Distance(position) <= 32) then
 					view.origin = defaultOrigin;
 				end;

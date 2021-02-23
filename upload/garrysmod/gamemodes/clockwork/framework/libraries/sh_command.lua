@@ -7,9 +7,7 @@
 --]]
 
 local Clockwork = Clockwork;
-local ErrorNoHalt = ErrorNoHalt;
 local pairs = pairs;
-local pcall = pcall;
 local concommand = concommand;
 local string = string;
 local table = table;
@@ -95,7 +93,7 @@ function Clockwork.command:SetHidden(name, isHidden)
 
 	if (SERVER) then
 		Clockwork.datastream:Start(nil, "HideCommand", {
-			index = Clockwork.kernel:GetShortCRC(uniqueID), 
+			index = Clockwork.kernel:GetShortCRC(uniqueID),
 			hidden = isHidden
 		});
 	elseif (isHidden and hidden[uniqueID]) then
@@ -116,19 +114,17 @@ function Clockwork.command:Register(data, name)
 	local realName = string.gsub(name, "%s", "");
 	local uniqueID = string.lower(realName);
 
-	if (CLIENT) then
-		if (self.stored[uniqueID]) then
-			self:RemoveHelp(self.stored[uniqueID]);
+	if CLIENT and self.stored[uniqueID] then
+		self:RemoveHelp(self.stored[uniqueID]);
+	end;
+
+	alias[uniqueID] = uniqueID;
+
+	if (data.alias and type(data.alias) == "table") then
+		for k, v in pairs(data.alias) do
+			alias[string.lower(tostring(v))] = uniqueID;
 		end;
 	end;
-	
- 	alias[uniqueID] = uniqueID;
- 
- 	if (data.alias and type(data.alias) == "table") then
- 		for k, v in pairs(data.alias) do
- 			alias[string.lower(tostring(v))] = uniqueID;
- 		end;
- 	end;
 
 	self.stored[uniqueID] = data;
 	self.stored[uniqueID].name = realName;
@@ -173,7 +169,7 @@ function Clockwork.command:AddAlias(identifier, name)
 		alias[lowerName] = uniqueID;
 	end;
 end;
- 
+
 --[[
 	@codebase Shared
 	@details Returns table of all command alias indexed by alias' names.
@@ -192,20 +188,18 @@ function Clockwork.command:HasAccess(player, command)
 	if (type(command) == "string") then
 		command = self:FindByAlias(command);
 	end;
-	
+
 	if (!Clockwork.player:HasFlags(player, command.access)) then
 		return false;
 	end;
-	
+
 	local faction = player:GetFaction();
 	local team = player:Team();
-	
-	if (command.factions) then
-		if (!table.HasValue(command.factions, faction)) then
-			return false;
-		end;
+
+	if command.factions and (!table.HasValue(command.factions, faction)) then
+		return false;
 	end;
-	
+
 	--[[ Backwards compatibility... --]]
 	if (command.faction) then
 		if (istable(command.faction)) then
@@ -216,130 +210,130 @@ function Clockwork.command:HasAccess(player, command)
 			return false;
 		end;
 	end;
-	
+
 	if (command.classes) then
 		local class = Clockwork.class:FindByID(team);
-		
-		if (class) then
-			if (!table.HasValue(command.classes, team)
-			and !table.HasValue(command.classes, class.name)) then
-				return false;
-			end;
+
+		if class and (!table.HasValue(command.classes, team) and !table.HasValue(command.classes, class.name)) then
+			return false;
 		end;
 	end;
-	
+
 	return true;
 end;
 
 if (SERVER) then
 	function Clockwork.command:ConsoleCommand(player, command, arguments)
-		if (arguments and arguments[1]) then
-			local realCommand = string.lower(arguments[1]);
-			local commandTable = self:FindByAlias(realCommand);
-			local commandPrefix = Clockwork.config:Get("command_prefix"):Get();
+		if !(arguments and arguments[1]) then return end
 
-			if (commandTable) then
-				table.remove(arguments, 1);
+		local realCommand = string.lower(table.remove(arguments, 1));
+		local commandTable = self:FindByAlias(realCommand);
+		local commandPrefix = Clockwork.config:Get("command_prefix"):Get();
 
-				for k, v in pairs(arguments) do
-					arguments[k] = Clockwork.kernel:Replace(arguments[k], " ' ", "'");
-					arguments[k] = Clockwork.kernel:Replace(arguments[k], " : ", ":");
-				end;
-
-				if (IsValid(player)) then
-					if (player:HasInitialized()) then
-						if (Clockwork.plugin:Call("PlayerCanUseCommand", player, commandTable, arguments)) then
-							if (#arguments >= commandTable.arguments) then
-								if (Clockwork.command:HasAccess(player, commandTable)) then
-									local flags = commandTable.flags;
-
-									if (Clockwork.player:GetDeathCode(player, true)) then
-										if (flags == 0 and CMD_DEATHCODE == 0) then
-											Clockwork.player:TakeDeathCode(player);
-										end;
-									end;
-
-									if (bit.band(flags, CMD_DEAD) > 0 and !player:Alive()) then
-										if (!player.cwDeathCodeAuth) then
-											Clockwork.player:Notify(player, {"CannotActionRightNow"});
-										end; return;
-									elseif (bit.band(flags, CMD_VEHICLE) > 0 and player:InVehicle()) then
-										if (!player.cwDeathCodeAuth) then
-											Clockwork.player:Notify(player, {"CannotActionRightNow"});
-										end; return;
-									elseif (bit.band(flags, CMD_RAGDOLLED) > 0 and player:IsRagdolled()) then
-										if (!player.cwDeathCodeAuth) then
-											Clockwork.player:Notify(player, {"CannotActionRightNow"});
-										end; return;
-									elseif (bit.band(flags, CMD_FALLENOVER) > 0 and player:GetRagdollState() == RAGDOLL_FALLENOVER) then
-										if (!player.cwDeathCodeAuth) then
-											Clockwork.player:Notify(player, {"CannotActionRightNow"});
-										end; return;
-									elseif (bit.band(flags, CMD_KNOCKEDOUT) > 0 and player:GetRagdollState() == RAGDOLL_KNOCKEDOUT) then
-										if (!player.cwDeathCodeAuth) then
-											Clockwork.player:Notify(player, {"CannotActionRightNow"});
-										end; return;
-									end;
-
-									if (commandTable.OnRun) then
-										local wasSuccess, value = pcall(commandTable.OnRun, commandTable, player, arguments);
-
-										if (!wasSuccess) then
-											MsgC(Color(255, 100, 0, 255), "\n[Clockwork:Command]\nThe '"..commandTable.name.."' command has failed to run.\n"..value.."\n");
-										elseif (Clockwork.player:GetDeathCode(player, true)) then
-											Clockwork.player:UseDeathCode(player, commandTable.name, arguments);
-										end;
-
-										if (wasSuccess) then
-											if (table.concat(arguments, " ") != "") then
-												Clockwork.kernel:PrintLog(LOGTYPE_GENERIC, {"LogPlayerUsedCommandArgs", player:Name(), commandPrefix..commandTable.name, table.concat(arguments, " ")});
-											else
-												Clockwork.kernel:PrintLog(LOGTYPE_GENERIC, {"LogPlayerUsedCommand", player:Name(), commandPrefix..commandTable.name});
-											end;
-
-											Clockwork.plugin:Call("PostCommandUsed", player, commandTable, arguments);
-											
-											return value;
-										end;
-									end;
-								else
-									Clockwork.player:Notify(player, {"NoAccessToCommand", player:Name()});
-								end;
-							else
-								Clockwork.player:Notify(player, commandTable.name.." "..L(player, commandTable.text).."!");
-							end;
-						end;
-					elseif (!Clockwork.player:GetDeathCode(player, true)) then
-						Clockwork.player:Notify(player, {"CannotUseCommandsYet"});
-					end;
-					
-					if (Clockwork.player:GetDeathCode(player)) then
-						Clockwork.player:TakeDeathCode(player);
-					end;
-				elseif (commandTable.OnConsoleRun) then
-					local wasSuccess, value = pcall(commandTable.OnConsoleRun, commandTable, arguments);
-
-					if (!wasSuccess) then
-						MsgC(Color(255, 100, 0, 255), "\n[Clockwork:Command]\nThe '"..commandTable.name.."' command has failed to run.\n"..value.."\n");
-					end;
-				else
-					print(L("NotValidCommandOrAlias"));
-				end;
-			elseif (IsValid(player)) then
-				Clockwork.player:Notify(player, {"NotValidCommandOrAlias"});
+		if (commandTable) then
+			for k, v in pairs(arguments) do
+				arguments[k] = Clockwork.kernel:Replace(arguments[k], " ' ", "'");
+				arguments[k] = Clockwork.kernel:Replace(arguments[k], " : ", ":");
 			end;
+
+			if (IsValid(player)) then
+				if (player:HasInitialized()) then
+					if !(Clockwork.plugin:Call("PlayerCanUseCommand", player, commandTable, arguments)) then return end
+
+
+
+					if (#arguments >= commandTable.arguments) then
+						if (Clockwork.command:HasAccess(player, commandTable)) then
+							local flags = commandTable.flags;
+
+							if (Clockwork.player:GetDeathCode(player, true)) and (flags == 0 and CMD_DEATHCODE == 0) then
+								Clockwork.player:TakeDeathCode(player);
+							end;
+
+							if (bit.band(flags, CMD_DEAD) > 0 and !player:Alive()) then
+								if (!player.cwDeathCodeAuth) then
+									Clockwork.player:Notify(player, {"CannotActionRightNow"});
+								end;
+								return;
+							elseif (bit.band(flags, CMD_VEHICLE) > 0 and player:InVehicle()) then
+								if (!player.cwDeathCodeAuth) then
+									Clockwork.player:Notify(player, {"CannotActionRightNow"});
+								end;
+								return;
+							elseif (bit.band(flags, CMD_RAGDOLLED) > 0 and player:IsRagdolled()) then
+								if (!player.cwDeathCodeAuth) then
+									Clockwork.player:Notify(player, {"CannotActionRightNow"});
+								end;
+								return;
+							elseif (bit.band(flags, CMD_FALLENOVER) > 0 and player:GetRagdollState() == RAGDOLL_FALLENOVER) then
+								if (!player.cwDeathCodeAuth) then
+									Clockwork.player:Notify(player, {"CannotActionRightNow"});
+								end;
+								return;
+							elseif (bit.band(flags, CMD_KNOCKEDOUT) > 0 and player:GetRagdollState() == RAGDOLL_KNOCKEDOUT) then
+								if (!player.cwDeathCodeAuth) then
+									Clockwork.player:Notify(player, {"CannotActionRightNow"});
+								end;
+								return;
+							end;
+
+							if (commandTable.OnRun) then
+								local wasSuccess, value = xpcall(commandTable.OnRun, debug.traceback, commandTable, player, arguments);
+
+								if (!wasSuccess) then
+									MsgC(Color(255, 100, 0, 255), "[Clockwork:Command] The '" .. commandTable.name .. "' command has failed to run.\n" .. value .. "\n");
+								elseif (Clockwork.player:GetDeathCode(player, true)) then
+									Clockwork.player:UseDeathCode(player, commandTable.name, arguments);
+								end;
+
+								if (wasSuccess) then
+									if (table.concat(arguments, " ") != "") then
+										Clockwork.kernel:PrintLog(LOGTYPE_GENERIC, {"LogPlayerUsedCommandArgs", player:Name(), commandPrefix .. commandTable.name, table.concat(arguments, " ")});
+									else
+										Clockwork.kernel:PrintLog(LOGTYPE_GENERIC, {"LogPlayerUsedCommand", player:Name(), commandPrefix .. commandTable.name});
+									end;
+
+									Clockwork.plugin:Call("PostCommandUsed", player, commandTable, arguments);
+
+									return value;
+								end;
+							end;
+						else
+							Clockwork.player:Notify(player, {"NoAccessToCommand", player:Name()});
+						end;
+					else
+						Clockwork.player:Notify(player, commandTable.name .. " " .. L(player, commandTable.text) .. "!");
+					end;
+				elseif (!Clockwork.player:GetDeathCode(player, true)) then
+					Clockwork.player:Notify(player, {"CannotUseCommandsYet"});
+				end;
+
+				if (Clockwork.player:GetDeathCode(player)) then
+					Clockwork.player:TakeDeathCode(player);
+				end;
+			elseif (commandTable.OnConsoleRun) then
+				local wasSuccess, value = xpcall(commandTable.OnConsoleRun, debug.traceback, commandTable, arguments);
+
+				if (!wasSuccess) then
+					MsgC(Color(255, 100, 0, 255), "[Clockwork:Command] The '" .. commandTable.name .. "' command has failed to run.\n" .. value .. "\n");
+				end;
+			else
+				print(L("NotValidCommandOrAlias"));
+			end;
+		elseif (IsValid(player)) then
+			Clockwork.player:Notify(player, {"NotValidCommandOrAlias"});
 		end;
 	end;
-	
+
 	concommand.Add("cw", function(player, command, arguments)
 		Clockwork.command:ConsoleCommand(player, command, arguments);
 	end);
-	
+
 	-- This command is being deprecated in favor of `cw`, avoid using `cwCmd` in future.
 	concommand.Add("cwCmd", function(player, command, arguments)
 		Clockwork.command:ConsoleCommand(player, command, arguments);
 	end);
-	
+
 	hook.Add("PlayerInitialSpawn", "Clockwork.command:PlayerInitialSpawn", function(player)
 		local hiddenCommands = {};
 
@@ -356,13 +350,13 @@ else
 		if (!commandTable.helpID) then
 			commandTable.helpID = Clockwork.directory:AddCode("HelpCommands", [[
 				<div class="cwTitleSeperator">
-					$command_prefix$]]..string.upper(commandTable.name)..[[
+					$command_prefix$]] .. string.upper(commandTable.name) .. [[
 				</div>
 				<div class="cwContentText">
 					<div class="cwCodeText">
-						<i><lang>]]..text..[[</lang></i>
+						<i><lang>]] .. text .. [[</lang></i>
 					</div>
-					<lang>]]..commandTable.tip..[[</lang>
+					<lang>]] .. commandTable.tip .. [[</lang>
 				</div>
 				<br>
 			]], true, commandTable.name);

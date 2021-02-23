@@ -9,7 +9,6 @@
 local Clockwork = Clockwork;
 local UnPredictedCurTime = UnPredictedCurTime;
 local RunConsoleCommand = RunConsoleCommand;
-local Material = Material;
 local IsValid = IsValid;
 local unpack = unpack;
 local Color = Color;
@@ -45,7 +44,7 @@ end;
 function chat.AddText(...)
 	local curColor = nil;
 	local text = {};
-	
+
 	for k, v in pairs({...}) do
 		if (type(v) == "Player") then
 			text[#text + 1] = cwTeam.GetColor(v:Team());
@@ -189,7 +188,7 @@ end;
 	@returns {Unknown}
 --]]
 function Clockwork.chatBox:GetX()
-	local x, y = Clockwork.chatBox:GetPosition();
+	local x, _ = Clockwork.chatBox:GetPosition();
 	return x;
 end;
 
@@ -199,7 +198,7 @@ end;
 	@returns {Unknown}
 --]]
 function Clockwork.chatBox:GetY()
-	local x, y = Clockwork.chatBox:GetPosition();
+	local _, y = Clockwork.chatBox:GetPosition();
 	return y;
 end;
 
@@ -210,7 +209,7 @@ end;
 --]]
 function Clockwork.chatBox:GetCurrentText()
 	local textEntry = self.textEntry;
-	
+
 	if (textEntry:IsVisible() and Clockwork.chatBox:IsOpen()) then
 		return textEntry:GetValue();
 	else
@@ -268,7 +267,7 @@ function Clockwork.chatBox:IsTypingVC()
 		end;
 	end;
 
-	return (#commands > 0), commands;
+	return #commands > 0, commands;
 end;
 
 --[[
@@ -280,7 +279,7 @@ end;
 function Clockwork.chatBox:GetSpacing(fontName)
 	local chatBoxTextFont = fontName or Clockwork.option:GetFont("chat_box_text");
 	local textWidth, textHeight = Clockwork.kernel:GetCachedTextSize(chatBoxTextFont, "U");
-	
+
 	if (textWidth and textHeight) then
 		return textHeight + 4;
 	end;
@@ -309,12 +308,12 @@ function Clockwork.chatBox:CreateDermaTextEntry()
 		self.textEntry:SetPos(34, 4);
 		self.textEntry:SetTabPosition(1);
 		self.textEntry:SetAllowNonAsciiCharacters(true);
-		
+
 		-- Called each frame.
 		self.textEntry.Think = function(textEntry)
 			local maxChatLength = Clockwork.config:Get("max_chat_length"):Get();
 			local text = textEntry:GetValue();
-			
+
 			if (text and text != "") then
 				if (string.utf8len(text) > maxChatLength) then
 					textEntry:SetRealValue(string.utf8sub(text, 0, maxChatLength));
@@ -325,36 +324,36 @@ function Clockwork.chatBox:CreateDermaTextEntry()
 					end;
 				end;
 			end;
-			
+
 			textEntry.previousText = text;
 		end;
-		
+
 		-- Called when enter has been pressed.
 		self.textEntry.OnEnter = function(textEntry)
 			local text = textEntry:GetValue();
-			
+
 			if (text and text != "") then
 				self.historyPos = #self.historyMsgs;
-				
+
 				--local replaceText = Clockwork.kernel:Replace(text, "\"", "~");
 				Clockwork.datastream:Start("PlayerSay", text);
 				--RunConsoleCommand("say", replaceText);
-				
+
 				Clockwork.plugin:Call("ChatBoxTextTyped", text);
 				textEntry:SetRealValue("");
 			end;
-			
+
 			if (text and text != "") then
 				self.panel:Hide(true);
 			else
 				self.panel:Hide();
 			end;
 		end;
-		
+
 		-- A function to set the text entry's real value.
 		self.textEntry.SetRealValue = function(textEntry, text, limit)
 			textEntry:SetText(text);
-			
+
 			if (text and text != "") then
 				if (limit) then
 					if (textEntry:GetCaretPos() > string.utf8len(text)) then
@@ -365,7 +364,7 @@ function Clockwork.chatBox:CreateDermaTextEntry()
 				end;
 			end;
 		end;
-		
+
 		-- Called when a key code has been typed.
 		self.textEntry.OnKeyCodeTyped = function(textEntry, code)
 			if (code == KEY_ENTER and !textEntry:IsMultiline() and textEntry:GetEnterAllowed()) then
@@ -374,25 +373,25 @@ function Clockwork.chatBox:CreateDermaTextEntry()
 			elseif (code == KEY_TAB) then
 				local text = textEntry:GetValue();
 				local prefix = Clockwork.config:Get("command_prefix"):Get();
-				
+
 				if (string.utf8sub(text, 1, string.utf8len(prefix)) == prefix) then
 					local exploded = string.Explode(" ", text);
-					
+
 					if (!exploded[2]) then
 						local commands = Clockwork.kernel:GetSortedCommands();
 						local useNextCmd = false;
 						local firstCmd = nil;
 						local command = string.utf8sub(exploded[1], string.utf8len(prefix) + 1);
-						
+
 						command = string.lower(command);
-						
+
 						for k, v in pairs(commands) do
 							v = string.lower(v);
-							
+
 							if (!firstCmd) then
 								firstCmd = v;
 							end;
-							
+
 							if ((string.utf8len(command) < string.utf8len(v)
 							and string.find(v, command) == 1) or useNextCmd) then
 								textEntry:SetRealValue(prefix..v);
@@ -401,22 +400,22 @@ function Clockwork.chatBox:CreateDermaTextEntry()
 								useNextCmd = true;
 							end
 						end
-						
+
 						if (useNextCmd and firstCmd) then
 							textEntry:SetRealValue(prefix..firstCmd);
 							return;
 						end
 					end;
 				end;
-				
+
 				text = Clockwork.plugin:Call("OnChatTab", text);
-				
+
 				if (text and type(text) == "string") then
 					textEntry:SetRealValue(text)
 				end;
 			else
 				local text = hook.Call("ChatBoxKeyCodeTyped", Clockwork, code, textEntry:GetValue());
-				
+
 				if (text and type(text) == "string") then
 					textEntry:SetRealValue(text)
 				end;
@@ -1323,7 +1322,7 @@ Clockwork.chatBox:RegisterDefaultClass("pm", "ooc", function(info)
 	local localized = Clockwork.chatBox:LangToTable("ChatPlayerPM", Color(125, 150, 75, 255), info.name, info.text);
 
 	Clockwork.chatBox:Add(info.filtered, nil, unpack(localized));
-	
+
 	surface.PlaySound("hl1/fvox/bell.wav");
 end);
 

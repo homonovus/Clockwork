@@ -1349,7 +1349,7 @@ if (SERVER) then
 	function Clockwork.entity:MakeFlushToGround(entity, position, normal)
 		entity:SetPos(position + (entity:GetPos() - entity:NearestPoint(position - (normal * 512))));
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to make an entity disintegrate.
@@ -1363,7 +1363,7 @@ if (SERVER) then
 			if (entity:GetClass() == "prop_ragdoll") then
 				for i = 1, entity:GetPhysicsObjectCount() do
 					local physicsObject = entity:GetPhysicsObjectNum(i);
-					
+
 					if (IsValid(physicsObject)) then
 						physicsObject:AddVelocity(velocity);
 					end;
@@ -1372,18 +1372,18 @@ if (SERVER) then
 				entity:GetPhysicsObject():AddVelocity(velocity);
 			end;
 		end;
-		
+
 		self:Decay(entity, delay, Callback);
-		
+
 		if (velocity) then
 			timer.Simple(math.min(1, delay / 2), function()
 				if (IsValid(entity)) then
 					entity:SetNotSolid(true);
-					
+
 					if (entity:GetClass() == "prop_ragdoll") then
 						for i = 1, entity:GetPhysicsObjectCount() do
 							local physicsObject = entity:GetPhysicsObjectNum(i);
-							
+
 							if (IsValid(physicsObject)) then
 								physicsObject:EnableMotion(false);
 							end;
@@ -1395,11 +1395,11 @@ if (SERVER) then
 			end);
 		else
 			entity:SetNotSolid(true);
-			
+
 			if (entity:GetClass() == "prop_ragdoll") then
 				for i = 1, entity:GetPhysicsObjectCount() do
 					local physicsObject = entity:GetPhysicsObjectNum(i);
-					
+
 					if (IsValid(physicsObject)) then
 						physicsObject:EnableMotion(false);
 					end;
@@ -1408,12 +1408,12 @@ if (SERVER) then
 				entity:GetPhysicsObject():EnableMotion(false);
 			end;
 		end;
-		
+
 		local effectData = EffectData();
 			effectData:SetEntity(entity);
 		util.Effect("entity_remove", effectData, true, true);
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to set an entity's player.
@@ -1423,7 +1423,7 @@ if (SERVER) then
 	function Clockwork.entity:SetPlayer(entity, player)
 		entity:SetNetworkedEntity("Player", player);
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to make an entity decay.
@@ -1432,41 +1432,41 @@ if (SERVER) then
 		@param {Function} What to run just before the entity is removed.
 	--]]
 	function Clockwork.entity:Decay(entity, seconds, Callback)
-		local color = entity:GetColor();		
+		local color = entity:GetColor();
 		local subtract = math.ceil(color.a / seconds);
 		local index = tostring({});
 		local alpha = color.a;
-		
+
 		if (!entity.cwIsDecaying) then
 			entity.cwIsDecaying = index;
 		end;
 
 		entity:SetRenderMode(RENDERMODE_TRANSALPHA);
-		
+
 		self:SetPlayer(entity, NULL);
 		index = entity.cwIsDecaying;
-		
-		Clockwork.kernel:CreateTimer("Decay"..index, 1, 0, function()
+
+		Clockwork.kernel:CreateTimer("Decay" .. index, 1, 0, function()
 			alpha = alpha - subtract;
-			
+
 			if (IsValid(entity)) then
-				local color = entity:GetColor();
+				color = entity:GetColor();
 				local decayed = math.Clamp(math.ceil(alpha), 0, 255);
-				
+
 				if (color.a <= 0) then
 					if (Callback) then Callback(); end;
-					
+
 					entity:Remove();
-					Clockwork.kernel:DestroyTimer("Decay"..index);
+					Clockwork.kernel:DestroyTimer("Decay" .. index);
 				else
 					entity:SetColor(Color(color.r, color.g, color.b, decayed));
 				end;
 			else
-				Clockwork.kernel:DestroyTimer("Decay"..index);
+				Clockwork.kernel:DestroyTimer("Decay" .. index);
 			end;
 		end);
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to create cash.
@@ -1479,7 +1479,7 @@ if (SERVER) then
 	function Clockwork.entity:CreateCash(ownerObj, cash, position, angles)
 		if (Clockwork.config:Get("cash_enabled"):Get()) then
 			local entity = ents.Create("cw_cash");
-			
+
 			if (type(ownerObj) == "table") then
 				if (ownerObj.key and ownerObj.uniqueID) then
 					Clockwork.player:GivePropertyOffline(ownerObj.key, ownerObj.uniqueID, entity, true);
@@ -1487,23 +1487,23 @@ if (SERVER) then
 			elseif (IsValid(ownerObj) and ownerObj:IsPlayer()) then
 				Clockwork.player:GiveProperty(ownerObj, entity);
 			end;
-			
+
 			if (!angles) then
 				angles = Angle(0, 0, 0);
 			end;
-			
+
 			entity:SetPos(position);
 			entity:SetAngles(angles);
 			entity:Spawn();
-			
+
 			if (IsValid(entity)) then
 				entity:SetAmount(math.Round(cash));
-				
+
 				return entity;
 			end;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to create generator.
@@ -1515,11 +1515,11 @@ if (SERVER) then
 	--]]
 	function Clockwork.entity:CreateGenerator(ownerObj, class, position, angles)
 		local entity = ents.Create(class);
-		
+
 		if (!angles) then
 			angles = Angle(0, 0, 0);
 		end;
-		
+
 		if (type(ownerObj) == "table") then
 			if (ownerObj.key and ownerObj.uniqueID) then
 				Clockwork.player:GivePropertyOffline(ownerObj.key, ownerObj.uniqueID, entity, true);
@@ -1527,14 +1527,14 @@ if (SERVER) then
 		elseif (IsValid(ownerObj) and ownerObj:IsPlayer()) then
 			Clockwork.player:GiveProperty(ownerObj, entity, true);
 		end;
-		
+
 		entity:SetAngles(angles);
 		entity:SetPos(position);
 		entity:Spawn();
-		
+
 		return entity;
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to create a shipment.
@@ -1547,11 +1547,11 @@ if (SERVER) then
 	--]]
 	function Clockwork.entity:CreateShipment(ownerObj, uniqueID, batch, position, angles)
 		local entity = ents.Create("cw_shipment");
-		
+
 		if (!angles) then
 			angles = Angle(0, 0, 0);
 		end;
-		
+
 		if (type(ownerObj) == "table") then
 			if (ownerObj.key and ownerObj.uniqueID) then
 				Clockwork.player:GivePropertyOffline(ownerObj.key, ownerObj.uniqueID, entity, true);
@@ -1559,15 +1559,15 @@ if (SERVER) then
 		elseif (IsValid(ownerObj) and ownerObj:IsPlayer()) then
 			Clockwork.player:GiveProperty(ownerObj, entity);
 		end;
-		
+
 		entity:SetItemTable(uniqueID, batch);
 		entity:SetAngles(angles);
 		entity:SetPos(position);
 		entity:Spawn();
-		
+
 		return entity;
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to create an item.

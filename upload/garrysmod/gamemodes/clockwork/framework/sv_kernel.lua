@@ -5443,8 +5443,9 @@ cwDatastream:Hook("MenuOption", function(player, data)
 	local item = data.item;
 	local option = data.option;
 	local entity = data.entity;
-	local data = data.data;
 	local shootPos = player:GetShootPos();
+
+	data = data.data;
 
 	if (type(data) != "table") then
 		data = {data};

@@ -860,7 +860,7 @@ function Clockwork:Initialize()
 	CW_CONVAR_SPAWNESP = cwKernel:CreateClientConVar("cwSpawnESP", 0, false, true);
 	CW_CONVAR_SALEESP = cwKernel:CreateClientConVar("cwSaleESP", 0, false, true);
 	CW_CONVAR_NPCESP = cwKernel:CreateClientConVar("cwNPCESP", 0, false, true);
-	
+
 	CW_CONVAR_ACTIVETHEME = cwKernel:CreateClientConVar("cwActiveTheme", "", true, true);
 	CW_CONVAR_TEXTCOLORR = cwKernel:CreateClientConVar("cwTextColorR", 255, true, true);
 	CW_CONVAR_TEXTCOLORG = cwKernel:CreateClientConVar("cwTextColorG", 200, true, true);
@@ -880,29 +880,29 @@ function Clockwork:Initialize()
 	CW_CONVAR_BACKH = cwKernel:CreateClientConVar("cwBackH", 109, true, true);
 	CW_CONVAR_SHOWMATERIAL = cwKernel:CreateClientConVar("cwShowMaterial", 0, true, true);
 	CW_CONVAR_SHOWGRADIENT = cwKernel:CreateClientConVar("cwShowGradient", 0, true, true);
-	
+
 	if (!cwChatBox.panel) then
 		cwChatBox:CreateDermaAll();
 	end;
-	
+
 	cwItem:Initialize();
-	
+
 	if (!cwOption:GetKey("top_bars")) then
 		CW_CONVAR_TOPBARS = cwKernel:CreateClientConVar("cwTopBars", 0, true, true);
 	else
 		cwSetting:RemoveByConVar("cwTopBars");
 	end;
-	
+
 	cwPlugin:Call("ClockworkKernelLoaded");
 	cwPlugin:Call("ClockworkInitialized");
-	
+
 	cwTheme:Initialize();
-	
+
 	cwPlugin:CheckMismatches();
 	cwPlugin:ClearHookCache();
 
 	cwSetting:AddSettings();
-	
+
 	if (!cwTheme:IsFixed()) then
 		cwOption:SetColor(
 			"information",
@@ -1131,25 +1131,24 @@ function Clockwork:CalcView(player, origin, angles, fov)
 
 	if (cwClient:IsRagdolled()) then
 		local ragdollEntity = cwClient:GetRagdollEntity();
-		local ragdollState = cwClient:GetRagdollState();
-		
+
 		if (self.BlackFadeIn == 255) then
 			return {origin = Vector(20000, 0, 0), angles = Angle(0, 0, 0), fov = fov};
 		else
 			local eyes = ragdollEntity:GetAttachment(ragdollEntity:LookupAttachment("eyes"));
-			
+
 			if (eyes) then
 				local ragdollEyeAngles = eyes.Ang + cwKernel:GetRagdollEyeAngles();
 				local physicsObject = ragdollEntity:GetPhysicsObject();
-				
+
 				if (IsValid(physicsObject)) then
 					local velocity = physicsObject:GetVelocity().z;
-					
+
 					if (velocity <= -1000 and cwClient:GetMoveType() == MOVETYPE_WALK) then
 						ragdollEyeAngles.p = ragdollEyeAngles.p + math.sin(UnPredictedCurTime()) * math.abs((velocity + 1000) - 16);
 					end;
 				end;
-				
+
 				return {origin = eyes.Pos, angles = ragdollEyeAngles, fov = fov};
 			else
 				return self.BaseClass:CalcView(player, origin, angles, fov);
@@ -1160,66 +1159,65 @@ function Clockwork:CalcView(player, origin, angles, fov)
 	elseif (cwConfig:Get("enable_headbob"):Get() and scale > 0) then
 		if (player:IsOnGround()) then
 			local frameTime = FrameTime();
-			
+
 			if (!cwPly:IsNoClipping(player)) then
 				local approachTime = frameTime * 2;
-				local curTime = UnPredictedCurTime();
 				local info = {speed = 1, yaw = 0.5, roll = 0.1};
-				
+
 				if (!self.HeadbobAngle) then
 					self.HeadbobAngle = 0;
 				end;
-				
+
 				if (!self.HeadbobInfo) then
 					self.HeadbobInfo = info;
 				end;
-				
+
 				cwPlugin:Call("PlayerAdjustHeadbobInfo", info);
-				
+
 				self.HeadbobInfo.yaw = math.Approach(self.HeadbobInfo.yaw, info.yaw, approachTime);
 				self.HeadbobInfo.roll = math.Approach(self.HeadbobInfo.roll, info.roll, approachTime);
 				self.HeadbobInfo.speed = math.Approach(self.HeadbobInfo.speed, info.speed, approachTime);
 				self.HeadbobAngle = self.HeadbobAngle + (self.HeadbobInfo.speed * frameTime);
-				
+
 				local yawAngle = math.sin(self.HeadbobAngle);
 				local rollAngle = math.cos(self.HeadbobAngle);
-				
+
 				angles.y = angles.y + (yawAngle * self.HeadbobInfo.yaw);
 				angles.r = angles.r + (rollAngle * self.HeadbobInfo.roll);
 
 				local velocity = player:GetVelocity();
 				local eyeAngles = player:EyeAngles();
-				
+
 				if (!self.VelSmooth) then self.VelSmooth = 0; end;
 				if (!self.WalkTimer) then self.WalkTimer = 0; end;
 				if (!self.LastStrafeRoll) then self.LastStrafeRoll = 0; end;
-				
+
 				self.VelSmooth = math.Clamp(self.VelSmooth * 0.9 + velocity:Length() * 0.1, 0, 700)
 				self.WalkTimer = self.WalkTimer + self.VelSmooth * FrameTime() * 0.05
-				
-				self.LastStrafeRoll = (self.LastStrafeRoll * 3) + (eyeAngles:Right():DotProduct(velocity) * 0.0001 * self.VelSmooth * 0.3);
+
+				self.LastStrafeRoll = (self.LastStrafeRoll * 3) + (eyeAngles:Right():Dot(velocity) * 0.0001 * self.VelSmooth * 0.3);
 				self.LastStrafeRoll = self.LastStrafeRoll * 0.25;
 				angles.r = angles.r + self.LastStrafeRoll;
-				
+
 				if (player:GetGroundEntity() != NULL) then
 					angles.p = angles.p + math.cos(self.WalkTimer * 0.5) * self.VelSmooth * 0.000002 * self.VelSmooth;
 					angles.r = angles.r + math.sin(self.WalkTimer) * self.VelSmooth * 0.000002 * self.VelSmooth;
 					angles.y = angles.y + math.cos(self.WalkTimer) * self.VelSmooth * 0.000002 * self.VelSmooth;
 				end;
-				
+
 				velocity = cwClient:GetVelocity().z;
-				
+
 				if (velocity <= -1000 and cwClient:GetMoveType() == MOVETYPE_WALK) then
 					angles.p = angles.p + math.sin(UnPredictedCurTime()) * math.abs((velocity + 1000) - 16);
 				end;
 			end;
 		end;
 	end;
-	
+
 	local view = self.BaseClass:CalcView(player, origin, angles, fov);
-	
+
 	cwPlugin:Call("CalcViewAdjustTable", view);
-	
+
 	return view;
 end;
 
@@ -1851,46 +1849,45 @@ end;
 	@returns {Unknown}
 --]]
 function Clockwork:HUDPaintForeground()
-	local backgroundColor = cwOption:GetColor("background");
 	local colorWhite = cwOption:GetColor("white");
 	local info = cwPlugin:Call("GetProgressBarInfo");
-	
+
 	if (info) then
 		local height = 32;
 		local width = (ScrW() * 0.5);
 		local x = ScrW() * 0.25;
 		local y = ScrH() * 0.3;
-		
+
 		SLICED_PROGRESS_BAR:Draw(x - 16, y - 16, width + 32, height + 32, 8);
-		
+
 		cwKernel:DrawBar(
 			x, y, width, height, info.color or cwOption:GetColor("information"),
 			info.text or "Progress Bar", info.percentage or 100, 100, info.flash, {uniqueID = info.uniqueID}
 		);
 	else
 		info = cwPlugin:Call("GetPostProgressBarInfo");
-		
+
 		if (info) then
 			local height = 32;
 			local width = (ScrW() / 2) - 64;
 			local x = ScrW() * 0.25;
 			local y = ScrH() * 0.3;
-			
+
 			SLICED_PROGRESS_BAR:Draw(x - 16, y - 16, width + 32, height + 32, 8);
-			
+
 			cwKernel:DrawBar(
 				x, y, width, height, info.color or cwOption:GetColor("information"),
 				info.text or "Progress Bar", info.percentage or 100, 100, info.flash, {uniqueID = info.uniqueID}
 			);
 		end;
 	end;
-	
+
 	if (cwPly:IsAdmin(cwClient)) then
 		if (cwPlugin:Call("PlayerCanSeeAdminESP")) then
 			cwKernel:DrawAdminESP();
 		end;
 	end;
-	
+
 	local screenTextInfo = cwPlugin:Call("GetScreenTextInfo");
 	
 	if (screenTextInfo) then
@@ -2446,13 +2443,13 @@ function Clockwork:GetModelSelectSequence(entity, model) end;
 --]]
 function Clockwork:GetAdminESPInfo(info)
 	for k, v in pairs(_player.GetAll()) do
-		if (v:HasInitialized()) then			
+		if (v:HasInitialized()) then
 			local physBone = v:LookupBone("ValveBiped.Bip01_Head1");
 			local position = nil;
-								
+
 			if (physBone) then
 				local bonePosition = v:GetBonePosition(physBone);
-						
+
 				if (bonePosition) then
 					position = bonePosition + Vector(0, 0, 16);
 				end;
@@ -2462,11 +2459,11 @@ function Clockwork:GetAdminESPInfo(info)
 
 			local topText = {v:Name()};
 
-			cwPlugin:Call("GetStatusInfo", v, topText);	
+			cwPlugin:Call("GetStatusInfo", v, topText);
 
 			local text = {
 				{
-					text = table.concat(topText, " "), 
+					text = table.concat(topText, " "),
 					color = _team.GetColor(v:Team())
 				}
 			};
@@ -2481,7 +2478,7 @@ function Clockwork:GetAdminESPInfo(info)
 	end;
 
 	if (CW_CONVAR_SALEESP:GetInt() == 1) then
-		for k, v in pairs (ents.GetAll()) do 
+		for k, v in pairs (ents.GetAll()) do
 			if (v:GetClass() == "cw_salesman") then
 				if (v:IsValid()) then
 					local position = v:GetPos() + Vector(0, 0, 80);
@@ -2492,11 +2489,11 @@ function Clockwork:GetAdminESPInfo(info)
 						position = position,
 						text = {
 							{
-								text = "[Salesman]", 
+								text = "[Salesman]",
 								color = color
 							},
 							{
-								text = saleName, 
+								text = saleName,
 								color = color
 							}
 						}
@@ -2507,7 +2504,7 @@ function Clockwork:GetAdminESPInfo(info)
 	end;
 
 	if (CW_CONVAR_ITEMESP:GetInt() == 1) then
-		for k, v in pairs (ents.GetAll()) do 
+		for k, v in pairs (ents.GetAll()) do
 			if (v:GetClass() == "cw_item") then
 				if (v:IsValid()) then
 					local position = v:GetPos();
@@ -2546,7 +2543,7 @@ end;
 --]]
 function Clockwork:GetStatusInfo(player, text)
 	local action = cwPly:GetAction(player, true);
-	
+
 	if (action) then
 		if (!player:IsRagdolled()) then
 			if (action == "lock") then
@@ -2563,15 +2560,15 @@ function Clockwork:GetStatusInfo(player, text)
 		elseif (!player:Alive()) then
 			table.insert(text, "[Dead]");
 		else
-			table.insert(text, "[Performing '"..action.."']");
+			table.insert(text, "[Performing '" .. action .. "']");
 		end;
 	end;
-	
+
 	if (player:GetRagdollState() == RAGDOLL_FALLENOVER) then
 		local fallenOver = player:GetSharedVar("FallenOver");
-				
+
 		if (fallenOver) then
-			table.insert(text, "[Fallen Over]");			
+			table.insert(text, "[Fallen Over]");
 		end;
 	end;
 end;
@@ -2592,10 +2589,10 @@ function Clockwork:GetPlayerESPInfo(player, text)
 		local colorRed = Color(255, 0, 0, 255);
 		local colorHealth = colorWhite;
 		local colorArmor = colorWhite;
-		
+
 		table.insert(text, {
-			text = player:SteamName(), 
-			color = Color(170, 170, 170, 255), 
+			text = player:SteamName(),
+			color = Color(170, 170, 170, 255),
 			icon = cwPly:GetChatIcon(player)
 		});
 
@@ -2606,40 +2603,40 @@ function Clockwork:GetPlayerESPInfo(player, text)
 			end;
 
 			table.insert(text, {
-				text = "Health: ["..health.."]", 
-				color = colorHealth, 
+				text = "Health: [" .. health .. "]",
+				color = colorHealth,
 				bar = {
 					value = health,
 					max = player:GetMaxHealth()
 				}
 			});
-			
+
 			if (player:Armor() > 0) then
 				table.insert(text, {
-					text = "Armor: ["..armor.."]",
-					color = colorArmor, 
+					text = "Armor: [" .. armor .. "]",
+					color = colorArmor,
 					bar = {
 						value = armor,
 						max = player:GetMaxArmor()
-					}, 
+					},
 					barColor = Color(30, 65, 175, 255)
 				});
 			end;
-		
-			if (weapon and IsValid(weapon)) then			
+
+			if (weapon and IsValid(weapon)) then
 				local raised = cwPly:GetWeaponRaised(player);
 				local color = colorWhite;
 
 				if (raised == true) then
 					color = colorRed;
 				end;
-				
+
 				if (weapon.GetPrintName) then
 					local printName = weapon:GetPrintName();
 
 					if (printName) then
 						table.insert(text, {
-							text = printName, 
+							text = printName,
 							color = color
 						});
 					end;
