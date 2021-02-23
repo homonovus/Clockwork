@@ -4422,7 +4422,7 @@ function Clockwork.player:SetRagdollState(player, state, delay, decay, force, mu
 			ragdoll:SetSkin(player:GetSkin());
 			ragdoll:SetPos(player:GetPos());
 
-			for i = 0, player:GetBodygroupCount() - 1 do
+			for i = 0, player:GetNumBodyGroups() - 1 do
 				ragdoll:SetBodygroup(i, player:GetBodygroup(i))
 			end
 
