@@ -36,16 +36,20 @@ function cwPickupObjects:ForceDropEntity(player)
 	end;
 
 	if (IsValid(entity)) then
+		local ents_to_do = {entity}
+		table.Add(ents_to_do, entity:GetChildren())
+
 		entity.cwNextTakeDmg = curTime + 1;
-		entity.cwHoldingGrab = nil;
-		
-		if (Clockwork.config:Get("prop_kill_protection"):Get()
-		and entity.cwLastCollideGroup) then
-			Clockwork.entity:ReturnCollisionGroup(entity, entity.cwLastCollideGroup);
-			
-			entity.cwLastCollideGroup = nil;
+
+		if (Clockwork.config:Get("prop_kill_protection"):Get()) then
+			for i, ent in ipairs(ents_to_do) do
+				Clockwork.entity:ReturnCollisionGroup(ent, ent.cwLastCollideGroup);
+
+				ent.cwHoldingGrab = nil;
+				ent.cwLastCollideGroup = nil;
+			end;
 		end;
-		
+
 		entity.cwDamageImmunity = CurTime() + 60;
 	end;
 
@@ -78,14 +82,19 @@ function cwPickupObjects:ForcePickup(player, entity, trace)
 	player.cwHoldingGrab:SetCollisionGroup(COLLISION_GROUP_WORLD);
 	player.cwHoldingGrab:SetNotSolid(true);
 	player.cwHoldingGrab:SetNoDraw(true);
-	
-	entity.cwHoldingGrab = player.cwHoldingGrab;
-	
-	if (Clockwork.config:Get("prop_kill_protection"):Get()
-	and !entity.cwLastCollideGroup) then
-		Clockwork.entity:StopCollisionGroupRestore(entity);
-		entity.cwLastCollideGroup = entity:GetCollisionGroup();
-		entity:SetCollisionGroup(COLLISION_GROUP_WEAPON);
+
+	local ents_to_do = {entity}
+	table.Add(ents_to_do, entity:GetChildren())
+
+	if (Clockwork.config:Get("prop_kill_protection"):Get()) then
+		for i, ent in ipairs(ents_to_do) do
+			if ent.cwLastCollideGroup then continue end
+
+			ent.cwHoldingGrab = player.cwHoldingGrab;
+			Clockwork.entity:StopCollisionGroupRestore(ent);
+			ent.cwLastCollideGroup = ent:GetCollisionGroup();
+			ent:SetCollisionGroup(COLLISION_GROUP_WEAPON);
+		end;
 	end;
 
 	player:EmitSound("physics/body/body_medium_impact_soft" .. math.random(1, 7) .. ".wav");
