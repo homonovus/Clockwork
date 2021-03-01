@@ -210,5 +210,9 @@ function cwAnimatedLegs:LegsThink(maxSeqGroundSpeed)
 			self.LegsEntity:SetColor(color_transparent);
 			self.LegsEntity:SetPoseParameter("vehicle_steer", (Clockwork.Client:GetVehicle():GetPoseParameter("vehicle_steer") * 2) - 1);
 		end;
+
+		for iBodygroupIndex = 0, Clockwork.Client:GetNumBodyGroups() - 1 do
+			self.LegsEntity:SetBodygroup(iBodygroupIndex, Clockwork.Client:GetBodygroup(iBodygroupIndex));
+		end;
 	end;
 end;
