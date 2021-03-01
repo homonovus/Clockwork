@@ -84,15 +84,15 @@ end;
 function cwPickupObjects:PlayerSetSharedVars(player, curTime)
 	if (player:IsRagdolled() and Clockwork.player:GetUnragdollTime(player)) then
 		local entity = player:GetRagdollEntity();
-		
+
 		if (IsValid(entity)) then
 			if (IsValid(entity.cwHoldingGrab) or entity:IsBeingHeld()) then
 				Clockwork.player:PauseUnragdollTime(player);
-				
+
 				player:SetSharedVar("IsDragged", true);
 			elseif (player:GetSharedVar("IsDragged")) then
 				Clockwork.player:StartUnragdollTime(player);
-				
+
 				player:SetSharedVar("IsDragged", false);
 			end;
 		else
@@ -124,7 +124,7 @@ function cwPickupObjects:KeyPress(player, key)
 						self:ForcePickup(player, entity, trace);
 					elseif (isDoor) then
 						local hands = player:GetActiveWeapon();
-						
+
 						hands:SecondaryAttack();
 					end;
 				end;

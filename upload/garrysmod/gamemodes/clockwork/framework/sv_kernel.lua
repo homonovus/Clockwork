@@ -245,7 +245,6 @@ end;
 	@returns {Unknown}
 --]]
 function Clockwork:PlayerThink(player, curTime, infoTable)
-	local playBreathSound = false;
 	local storageTable = player:GetStorageTable();
 
 	if (!cwConfig:Get("cash_enabled"):Get()) then

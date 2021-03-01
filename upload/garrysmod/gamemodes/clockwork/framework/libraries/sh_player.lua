@@ -3216,47 +3216,47 @@ function Clockwork.player:UseCharacter(player, characterID)
 	local isCharacterMenuReset = player:IsCharacterMenuReset();
 	local currentCharacter = player:GetCharacter();
 	local character = player.cwCharacterList[characterID];
-	
+
 	if (!character) then
 		return false, {"CharacterDoesNotExist"};
 	end;
-	
+
 	if (currentCharacter != character or isCharacterMenuReset) then
 		local factionTable = cwFaction:FindByID(character.faction);
 		local fault = cwPlugin:Call("PlayerCanUseCharacter", player, character);
-		
+
 		if (fault == nil or fault == true) then
 			local players = #cwFaction:GetPlayers(character.faction);
 			local limit = cwFaction:GetLimit(factionTable.name);
-			
+
 			if (isCharacterMenuReset and character.faction == currentCharacter.faction) then
 				players = players - 1;
 			end;
-				
+
 			if (cwPlugin:Call("PlayerCanBypassFactionLimit", player, character)) then
 				limit = nil;
 			end;
-			
+
 			if (limit and players == limit) then
 				return false, {"CannotSwitchFactionFull", character.faction, limit, limit};
 			else
 				if (currentCharacter) then
-					local fault = cwPlugin:Call("PlayerCanSwitchCharacter", player, character);
-					
+					fault = cwPlugin:Call("PlayerCanSwitchCharacter", player, character);
+
 					if (fault != nil and fault != true) then
 						return false, fault or {"YouCannotSwitchToCharacter"};
 					end;
 				end;
-				
+
 				cwKernel:PrintLog(LOGTYPE_GENERIC, {"LogPlayerLoadedChar", player:SteamName(), character.name});
-				
+
 				if (isCharacterMenuReset) then
 					player.cwCharMenuReset = false;
 					player:Spawn();
 				else
 					self:LoadCharacter(player, characterID);
 				end;
-				
+
 				return true;
 			end;
 		else

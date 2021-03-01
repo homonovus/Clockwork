@@ -148,7 +148,7 @@ end;
 	@returns {Bool} Whether or not the tables are equal.
 --]]
 function Clockwork.kernel:AreTablesEqual(tableA, tableB)
-	if (type(tableA) == "table" and type(tableB) == "table") then
+	if istable(tableA) and istable(tableB) then
 		for k, v in pairs(tableA) do
 			if (!self:AreTablesEqual(v, tableB[k])) then
 				return false;
@@ -606,14 +606,14 @@ function Clockwork:PlayerFootstep(player, position, foot, sound, volume, recipie
 		if (itemTable) then
 			if (player:IsRunning() or player:IsJogging()) then
 				if (itemTable.runSound) then
-					if (type(itemTable.runSound) == "table") then
+					if (istable(itemTable.runSound)) then
 						sound = itemTable.runSound[ mathRandom(1, #itemTable.runSound) ];
 					else
 						sound = itemTable.runSound;
 					end;
 				end;
 			elseif (itemTable.walkSound) then
-				if (type(itemTable.walkSound) == "table") then
+				if (istable(itemTable.walkSound)) then
 					sound = itemTable.walkSound[ mathRandom(1, #itemTable.walkSound) ];
 				else
 					sound = itemTable.walkSound;
@@ -879,11 +879,11 @@ function Clockwork:CalcMainActivity(player, velocity)
 		end;
 	end;
 
-	if (type(player.CalcSeqOverride) == "string") then
+	if (isstring(player.CalcSeqOverride)) then
 		player.CalcSeqOverride = player:LookupSequence(player.CalcSeqOverride);
 	end;
 
-	if (type(player.CalcIdeal) == "string") then
+	if (isstring(player.CalcIdeal)) then
 		player.CalcSeqOverride = player:LookupSequence(player.CalcIdeal);
 	end;
 
@@ -1829,7 +1829,7 @@ if (SERVER) then
 			if (v.OnEarned) then
 				local result = v:OnEarned(player, info.cash);
 
-				if (type(result) == "number") then
+				if (isnumber(result)) then
 					info.cash = result;
 				end;
 
@@ -2079,16 +2079,20 @@ else
 		@returns {Unknown}
 	--]]
 	function Clockwork.kernel:CalculateAlphaFromDistance(maximum, start, finish)
-		if (type(start) == "Player") then
-			start = start:GetShootPos();
-		elseif (type(start) == "Entity") then
-			start = start:GetPos();
+		if (isentity(start)) then
+			if (start:IsPlayer()) then
+				start = start:GetShootPos();
+			else
+				start = start:GetPos();
+			end;
 		end;
 
-		if (type(finish) == "Player") then
-			finish = finish:GetShootPos();
-		elseif (type(finish) == "Entity") then
-			finish = finish:GetPos();
+		if (isentity(finish)) then
+			if (finish:IsPlayer()) then
+				finish = finish:GetShootPos();
+			else
+				finish = finish:GetPos();
+			end;
 		end;
 
 		return mathClamp(255 - ((255 / maximum) * (start:Distance(finish))), 0, 255);
@@ -2271,11 +2275,11 @@ else
 		end);
 
 		for k, v in pairs(options) do
-			if (type(v[2]) == "table" and !v[2].isArgTable) then
+			if (istable(v[2]) and !v[2].isArgTable) then
 				if (tableCount(v[2]) > 0) then
 					self:AddMenuFromData(menuPanel:AddSubMenu(T(v[1])), v[2], Callback);
 				end;
-			elseif (type(v[2]) == "function") then
+			elseif (isfunction(v[2])) then
 				menuPanel:AddOption(T(v[1]), v[2]);
 			elseif (Callback) then
 				Callback(menuPanel, v[1], v[2]);
@@ -2326,7 +2330,7 @@ else
 		local localized = T(text);
 
 		if (color) then
-			if (type(color) == "string") then
+			if (isstring(color)) then
 				color = Clockwork.option:GetColor(color);
 			end;
 		else
@@ -2345,7 +2349,7 @@ else
 			tableRemove(self.CenterHints, 10);
 		end;
 
-		if (type(noSound) == "string") then
+		if (isstring(noSound)) then
 			surface.PlaySound(noSound);
 		elseif (noSound == nil) then
 			surface.PlaySound("hl1/fvox/blip.wav");
@@ -2427,7 +2431,7 @@ else
 		local localized = T(text);
 
 		if (color) then
-			if (type(color) == "string") then
+			if (isstring(color)) then
 				color = Clockwork.option:GetColor(color);
 			end;
 		else
@@ -2446,7 +2450,7 @@ else
 			tableRemove(self.Hints, 10);
 		end;
 
-		if (type(noSound) == "string") then
+		if (isstring(noSound)) then
 			surface.PlaySound(noSound);
 		elseif (noSound == nil) then
 			surface.PlaySound("hl1/fvox/blip.wav");
@@ -2618,7 +2622,7 @@ else
 				if (!Clockwork.InfoMenuPanel.VisibilitySet) then
 					Clockwork.InfoMenuPanel.VisibilitySet = true;
 
-					timer.Simple(FrameTime() * 2, function()
+					timer.Simple(0, function()
 						if (IsValid(Clockwork.InfoMenuPanel)) then
 							Clockwork.InfoMenuPanel:SetVisible(true);
 						end;
@@ -2827,14 +2831,14 @@ else
 			local text, color, height;
 
 			if (position) then
-				if (type(v.text) == "string") then
+				if (isstring(v.text)) then
 					self:DrawSimpleText(v.text, position.x, position.y, v.color or colorWhite, 1, 1);
 				else
 					for k2, v2 in ipairs(v.text) do
 						local barValue;
 						local maximum = 100;
 
-						if (type(v2) == "string") then
+						if (isstring(v2)) then
 							text = v2;
 							color = v.color;
 						else
@@ -2843,7 +2847,7 @@ else
 
 							local barNumbers = v2.bar;
 
-							if (type(barNumbers) == "table") then
+							if (istable(barNumbers)) then
 								barValue = barNumbers.value;
 								maximum = barNumbers.max;
 							else
@@ -2886,7 +2890,7 @@ else
 							draw.RoundedBox(6, position.x - 50, position.y - (barHeight * 0.45), mathFloor(progress), barHeight, barColor);
 						end;
 
-						if (type(text) == "string") then
+						if (isstring(text)) then
 							self:DrawSimpleText(text, position.x, position.y, color or colorWhite, 1, 1);
 						end;
 
@@ -3418,12 +3422,12 @@ else
 		if (!Clockwork.Gradients[gradientType]) then
 			return;
 		end;
-		
+
 		surface.SetDrawColor(color.r, color.g, color.b, color.a);
 		surface.SetTexture(Clockwork.Gradients[gradientType]);
 		surface.DrawTexturedRect(x, y, width, height);
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to draw a simple gradient box.
@@ -3438,16 +3442,16 @@ else
 	--]]
 	function Clockwork.kernel:DrawSimpleGradientBox(cornerSize, x, y, width, height, color, maxAlpha)
 		local gradientAlpha = mathMin(color.a, maxAlpha or 100);
-		
+
 		draw.RoundedBox(cornerSize, x, y, width, height, Color(color.r, color.g, color.b, color.a * 0.75));
-		
+
 		if (x + cornerSize < x + width and y + cornerSize < y + height) then
 			surface.SetDrawColor(gradientAlpha, gradientAlpha, gradientAlpha, gradientAlpha);
 			surface.SetMaterial(self:GetGradientTexture());
 			surface.DrawTexturedRect(x + cornerSize, y + cornerSize, width - (cornerSize * 2), height - (cornerSize * 2));
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to draw a textured gradient.
@@ -3462,7 +3466,7 @@ else
 	--]]
 	function Clockwork.kernel:DrawTexturedGradientBox(cornerSize, x, y, width, height, color, maxAlpha)
 		local gradientAlpha = mathMin(color.a, maxAlpha or 100);
-		
+
 		draw.RoundedBox(cornerSize, x, y, width, height, Color(color.r, color.g, color.b, color.a * 0.75));
 
 		if (x + cornerSize < x + width and y + cornerSize < y + height) then
@@ -3471,7 +3475,7 @@ else
 			surface.DrawTexturedRect(x + cornerSize, y + cornerSize, width - (cornerSize * 2), height - (cornerSize * 2));
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to draw a player information sub box.
@@ -3486,20 +3490,20 @@ else
 		local foregroundColor = Clockwork.option:GetColor("foreground");
 		local colorInfo = Clockwork.option:GetColor("information");
 		local boxHeight = boxInfo.textHeight + 8;
-		
+
 		if (boxInfo.drawBackground) then
 			SLICED_PLAYER_INFO:Draw(x, y, width, boxHeight, 4, foregroundColor, 50);
 		end;
-		
+
 		self:DrawInfo(text, x + 8, y + (boxHeight / 2), colorInfo, 255, true,
 			function(x, y, width, height)
 				return x, y - (height / 2);
 			end
 		);
-		
+
 		return x, y + boxHeight + 4;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to handle an item's spawn icon click.
@@ -3511,19 +3515,19 @@ else
 	function Clockwork.kernel:HandleItemSpawnIconClick(itemTable, spawnIcon, Callback)
 		local customFunctions = itemTable("customFunctions");
 		local itemFunctions = {};
-		
+
 		if (itemTable.OnUse and !itemTable.noInventoryUse) then
 			itemFunctions[#itemFunctions + 1] = itemTable("useText", "Use");
 		end;
-		
+
 		if (itemTable.OnDrop) then
 			itemFunctions[#itemFunctions + 1] = itemTable("dropText", "Drop");
 		end;
-		
+
 		if (itemTable.OnDestroy) then
 			itemFunctions[#itemFunctions + 1] = itemTable("destroyText", "Destroy");
 		end;
-		
+
 		if (customFunctions) then
 			for k, v in pairs(customFunctions) do
 				itemFunctions[#itemFunctions + 1] = v;
@@ -3532,34 +3536,34 @@ else
 
 		if (itemTable.GetOptions) then
 			local options = itemTable:GetOptions(nil, nil);
-			
+
 			for k, v in pairs(options) do
 				itemFunctions[#itemFunctions + 1] = {title = k, name = v};
 			end
 		end
-		
+
 		if (itemTable.OnEditFunctions) then
 			itemTable:OnEditFunctions(itemFunctions);
 		end;
-		
+
 		Clockwork.plugin:Call("PlayerAdjustItemFunctions", itemTable, itemFunctions);
-		
+
 		self:ValidateTableKeys(itemFunctions);
-		
+
 		tableSort(itemFunctions, function(a, b)
 			return ((type(a) == "table" and a.title) or a) < ((type(b) == "table" and b.title) or b);
 		end);
-		
+
 		if (#itemFunctions == 0 and !Callback) then
 			return;
 		end;
-		
+
 		local options = {};
-		
+
 		if (itemTable.GetEntityMenuOptions) then
 			itemTable:GetEntityMenuOptions(nil, options);
 		end;
-	
+
 		local itemMenu = self:AddMenuFromData(nil, options, function(menuPanel, option, arguments)
 			menuPanel:AddOption(T(option), function()
 				if (type(arguments) == "table" and arguments.isArgTable) then
@@ -3569,16 +3573,16 @@ else
 				elseif (arguments == "function") then
 					arguments();
 				end;
-				
-				timer.Simple(FrameTime(), function()
+
+				timer.Simple(0, function()
 					self:RemoveActiveToolTip();
 				end);
 			end);
-			
+
 			menuPanel.Items = menuPanel:GetChildren();
-			
+
 			local panel = menuPanel.Items[#menuPanel.Items];
-			
+
 			if (IsValid(panel)) then
 				if (type(arguments) == "table") then
 					if (arguments.toolTip) then
@@ -3589,20 +3593,20 @@ else
 				end;
 			end;
 		end, nil, true);
-		
+
 		if (Callback) then
 			Callback(itemMenu);
 		end;
-		
+
 		itemMenu:SetMinimumWidth(100);
-		
+
 		Clockwork.plugin:Call("PlayerAdjustItemMenu", itemTable, itemMenu, itemFunctions);
-			
+
 		for k, v in pairs(itemFunctions) do
 			local useText = itemTable("useText", "Use");
 			local dropText = itemTable("dropText", "Drop");
 			local destroyText = itemTable("destroyText", "Destroy");
-			
+
 			if (v == useText) then
 				itemMenu:AddOption(T(v), function()
 					if (itemTable) then
@@ -3629,7 +3633,7 @@ else
 				end);
 			elseif (v == destroyText) then
 				local subMenu = itemMenu:AddSubMenu(T(v));
-				
+
 				subMenu:AddOption("Yes", function()
 					if (itemTable) then
 						self:RunCommand(
@@ -3637,21 +3641,21 @@ else
 						);
 					end;
 				end);
-				
+
 				subMenu:AddOption("No", function() end);
 			elseif (type(v) == "table") then
 				itemMenu:AddOption(T(v.title), function()
 					local defaultAction = true;
-					
+
 					if (itemTable.HandleOptions) then
 						local transmit, data = itemTable:HandleOptions(v.name);
-						
+
 						if (transmit) then
 							Clockwork.datastream:Start("MenuOption", {option = v.name, data = data, item = itemTable("itemID")});
 							defaultAction = false;
 						end;
 					end;
-					
+
 					if (defaultAction) then
 						self:RunCommand(
 							"InvAction", v.name, itemTable("uniqueID"), itemTable("itemID")
@@ -3662,7 +3666,7 @@ else
 				if (itemTable.OnCustomFunction) then
 					itemTable:OnCustomFunction(v);
 				end;
-				
+
 				itemMenu:AddOption(T(v), function()
 					if (itemTable) then
 						self:RunCommand(
@@ -3672,10 +3676,10 @@ else
 				end);
 			end;
 		end;
-		
+
 		itemMenu:Open();
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to handle an item's spawn icon right click.
@@ -3686,23 +3690,21 @@ else
 	function Clockwork.kernel:HandleItemSpawnIconRightClick(itemTable, spawnIcon)
 		if (itemTable.OnHandleRightClick) then
 			local functionName = itemTable:OnHandleRightClick();
-			
+
 			if (functionName and functionName ~= "Use") then
 				local customFunctions = itemTable("customFunctions");
-				
-				if (customFunctions and tableHasValue(customFunctions, functionName)) then
-					if (itemTable.OnCustomFunction) then
-						itemTable:OnCustomFunction(v);
-					end;
+
+				if (customFunctions and tableHasValue(customFunctions, functionName)) and itemTable.OnCustomFunction then
+					itemTable:OnCustomFunction();
 				end;
-				
+
 				self:RunCommand(
 					"InvAction", stringLower(functionName), itemTable("uniqueID"), itemTable("itemID")
 				);
 				return;
 			end;
 		end;
-		
+
 		if (itemTable.OnUse) then
 			if (itemTable.OnHandleUse) then
 				itemTable:OnHandleUse(function()
@@ -3713,7 +3715,7 @@ else
 			end;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to set a panel's perform layout callback.
@@ -3724,7 +3726,7 @@ else
 	function Clockwork.kernel:SetOnLayoutCallback(target, Callback)
 		if (target.PerformLayout) then
 			target.OldPerformLayout = target.PerformLayout;
-			
+
 			--[[
 				@codebase Shared
 				@details Called when the panel's layout is performed.
@@ -3735,7 +3737,7 @@ else
 			end;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to set the active titled DMenu.
@@ -3749,7 +3751,7 @@ else
 			title = title
 		};
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to add a markup line.
@@ -3760,12 +3762,12 @@ else
 	--]]
 	function Clockwork.kernel:AddMarkupLine(markupText, text, color)
 		if (markupText ~= "") then
-			markupText = markupText.."\n";
+			markupText = markupText .. "\n";
 		end;
-		
-		return markupText..self:MarkupTextWithColor(text, color);
+
+		return markupText .. self:MarkupTextWithColor(text, color);
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to draw a markup tool tip.
@@ -3778,24 +3780,24 @@ else
 	function Clockwork.kernel:DrawMarkupToolTip(markupObject, x, y, alpha)
 		local height = markupObject:GetHeight();
 		local width = markupObject:GetWidth();
-		
+
 		if (x - (width / 2) > 0) then
 			x = x - (width / 2);
 		end;
-		
+
 		if (x + width > ScrW()) then
 			x = x - width - 8;
 		end;
-		
+
 		if (y + (height + 8) > ScrH()) then
 			y = y - height - 8;
 		end;
-		
+
 		self:DrawSimpleGradientBox(2, x - 8, y - 8, width + 16, height + 16, Color(50, 50, 50, alpha));
-		
+
 		markupObject:Draw(x, y, nil, nil, alpha);
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to override a markup object's draw function.
@@ -3810,29 +3812,29 @@ else
 					debug.Trace();
 					return;
 				end;
-			
+
 				local alpha = v.colour.a or 255;
 				local y = yOffset + (v.height - v.thisY) + v.offset.y;
 				local x = xOffset;
-				
+
 				if (hAlign == TEXT_ALIGN_CENTER) then
 					x = x - (self.totalWidth / 2);
 				elseif (hAlign == TEXT_ALIGN_RIGHT) then
 					x = x - self.totalWidth;
 				end;
-				
+
 				x = x + v.offset.x;
-				
+
 				if (hAlign == TEXT_ALIGN_CENTER) then
 					y = y - (self.totalHeight / 2);
 				elseif (hAlign == TEXT_ALIGN_BOTTOM) then
 					y = y - self.totalHeight;
 				end;
-				
+
 				if (alphaOverride) then
 					alpha = alphaOverride;
 				end;
-				
+
 				-- TODO: May need to revert back to using v.font for the backup font.
 				Clockwork.kernel:OverrideMainFont(customFont or v.font);
 					Clockwork.kernel:DrawSimpleText(v.text, x, y, Color(v.colour.r, v.colour.g, v.colour.b, alpha));
@@ -3840,7 +3842,7 @@ else
 			end;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to get the active markup tool tip.
@@ -3849,7 +3851,7 @@ else
 	function Clockwork.kernel:GetActiveMarkupToolTip()
 		return Clockwork.MarkupToolTip;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to get markup from a color.
@@ -3857,9 +3859,9 @@ else
 		@returns {Unknown}
 	--]]
 	function Clockwork.kernel:ColorToMarkup(color)
-		return "<color="..mathCeil(color.r)..","..mathCeil(color.g)..","..mathCeil(color.b)..">";
+		return "<color=" .. mathCeil(color.r) .. "," .. mathCeil(color.g) .. "," .. mathCeil(color.b) .. ">";
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to markup text with a color.
@@ -3871,16 +3873,16 @@ else
 	function Clockwork.kernel:MarkupTextWithColor(text, color, scale)
 		local fontName = Clockwork.fonts:GetMultiplied("cwTooltip", scale or 1);
 		local finalText = text;
-		
+
 		if (color) then
-			finalText = self:ColorToMarkup(color)..text.."</color>";
+			finalText = self:ColorToMarkup(color) .. text .. "</color>";
 		end;
-		
-		finalText = "<font="..fontName..">"..finalText.."</font>";
-		
+
+		finalText = "<font=" .. fontName .. ">" .. finalText .. "</font>";
+
 		return finalText;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to create a markup tool tip.
@@ -3890,51 +3892,51 @@ else
 	function Clockwork.kernel:CreateMarkupToolTip(panel)
 		panel.OldCursorExited = panel.OnCursorExited;
 		panel.OldCursorEntered = panel.OnCursorEntered;
-		
-		function panel.OnCursorEntered(panel, ...)
-			if (panel.OldCursorEntered) then
-				panel:OldCursorEntered(...);
+
+		function panel.OnCursorEntered(pan, ...)
+			if (pan.OldCursorEntered) then
+				pan:OldCursorEntered(...);
 			end;
-			
-			Clockwork.MarkupToolTip = panel;
+
+			Clockwork.MarkupToolTip = pan;
 		end;
 
-		function panel.OnCursorExited(panel, ...)
-			if (panel.OldCursorExited) then
-				panel:OldCursorExited(...);
+		function panel.OnCursorExited(pan, ...)
+			if (pan.OldCursorExited) then
+				pan:OldCursorExited(...);
 			end;
-			
-			if (Clockwork.MarkupToolTip == panel) then
+
+			if (Clockwork.MarkupToolTip == pan) then
 				Clockwork.MarkupToolTip = nil;
 			end;
 		end;
-		
-		function panel.SetMarkupToolTip(panel, text)
+
+		function panel.SetMarkupToolTip(pan, text)
 			if (!string.find(text, "</font>")) then
 				text = Clockwork.kernel:MarkupTextWithColor(text);
 			end;
-		
-			if (!panel.MarkupToolTip or panel.MarkupToolTip.text ~= text) then
-				panel.MarkupToolTip = {
+
+			if (!pan.MarkupToolTip or pan.MarkupToolTip.text ~= text) then
+				pan.MarkupToolTip = {
 					object = markup.Parse(text, ScrW() * 0.25),
 					text = text
 				};
-				
-				self:OverrideMarkupDraw(panel.MarkupToolTip.object);
+
+				self:OverrideMarkupDraw(pan.MarkupToolTip.object);
 			end;
 		end;
-		
-		function panel.GetMarkupToolTip(panel)
-			return panel.MarkupToolTip;
+
+		function panel.GetMarkupToolTip(pan)
+			return pan.MarkupToolTip;
 		end;
-		
-		function panel.SetToolTip(panel, toolTip)
-			panel:SetMarkupToolTip(toolTip);
+
+		function panel.SetToolTip(pan, toolTip)
+			pan:SetMarkupToolTip(toolTip);
 		end;
-		
+
 		return panel;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to create a custom category panel.
@@ -3946,16 +3948,16 @@ else
 		if (!parent.CategoryList) then
 			parent.CategoryList = {};
 		end;
-		
+
 		local collapsibleCategory = vgui.Create("DCollapsibleCategory", parent);
 			collapsibleCategory:SetExpanded(true);
 			collapsibleCategory:SetPadding(4);
 			collapsibleCategory:SetLabel(categoryName);
 		parent.CategoryList[#parent.CategoryList + 1] = collapsibleCategory;
-		
+
 		return collapsibleCategory;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to draw the armor bar.
@@ -3963,13 +3965,13 @@ else
 	--]]
 	function Clockwork.kernel:DrawArmorBar()
 		local armor = mathClamp(Clockwork.Client:Armor(), 0, Clockwork.Client:GetMaxArmor());
-		
+
 		if (!self.armor) then
 			self.armor = armor;
 		else
 			self.armor = mathApproach(self.armor, armor, 1);
 		end;
-		
+
 		if (armor > 0) then
 			Clockwork.bars:Add("ARMOR", Color(139, 174, 179, 255), "", self.armor, Clockwork.Client:GetMaxArmor(), self.health < 10, 1);
 		end;
@@ -3982,18 +3984,18 @@ else
 	--]]
 	function Clockwork.kernel:DrawHealthBar()
 		local health = mathClamp(Clockwork.Client:Health(), 0, Clockwork.Client:GetMaxHealth());
-		
+
 		if (!self.armor) then
 			self.health = health;
 		else
 			self.health = mathApproach(self.health, health, 1);
 		end;
-		
+
 		if (health > 0) then
 			Clockwork.bars:Add("HEALTH", Color(179, 46, 49, 255), "", self.health, Clockwork.Client:GetMaxHealth(), self.health < 10, 2);
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to remove the active tool tip.
@@ -4002,7 +4004,7 @@ else
 	function Clockwork.kernel:RemoveActiveToolTip()
 		ChangeTooltip();
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to close active Derma menus.
@@ -4011,7 +4013,7 @@ else
 	function Clockwork.kernel:CloseActiveDermaMenus()
 		CloseDermaMenus();
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to register a background blur.
@@ -4022,7 +4024,7 @@ else
 	function Clockwork.kernel:RegisterBackgroundBlur(panel, fCreateTime)
 		Clockwork.BackgroundBlurs[panel] = fCreateTime or SysTime();
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to remove a background blur.
@@ -4032,7 +4034,7 @@ else
 	function Clockwork.kernel:RemoveBackgroundBlur(panel)
 		Clockwork.BackgroundBlurs[panel] = nil;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to draw the background blurs.
@@ -4041,30 +4043,30 @@ else
 	function Clockwork.kernel:DrawBackgroundBlurs()
 		local scrH, scrW = ScrH(), ScrW();
 		local sysTime = SysTime();
-		
+
 		for k, v in pairs(Clockwork.BackgroundBlurs) do
 			if (type(k) == "string" or (IsValid(k) and k:IsVisible())) then
 				local fraction = mathClamp((sysTime - v) / 1, 0, 1);
 				local x, y = 0, 0;
-				
+
 				surface.SetMaterial(Clockwork.ScreenBlur);
 				surface.SetDrawColor(255, 255, 255, 255);
-				
+
 				for i = 0.33, 1, 0.33 do
 					Clockwork.ScreenBlur:SetFloat("$blur", fraction * 5 * i);
 					Clockwork.ScreenBlur:Recompute();
-					
+
 					if (render) then render.UpdateScreenEffectTexture();end;
-					
+
 					surface.DrawTexturedRect(x, y, scrW, scrH);
 				end;
-				
+
 				surface.SetDrawColor(10, 10, 10, 200 * fraction);
 				surface.DrawRect(x, y, scrW, scrH);
 			end;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to get the notice panel.
@@ -4075,7 +4077,7 @@ else
 			return Clockwork.NoticePanel;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to set the notice panel.
@@ -4085,7 +4087,7 @@ else
 	function Clockwork.kernel:SetNoticePanel(noticePanel)
 		Clockwork.NoticePanel = noticePanel;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to add some cinematic text.
@@ -4107,14 +4109,14 @@ else
 			text = T(text),
 			add = 0
 		};
-		
+
 		if (bThisOnly) then
 			Clockwork.Cinematics[1] = cinematicTable;
 		else
 			Clockwork.Cinematics[#Clockwork.Cinematics + 1] = cinematicTable;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to add a notice.
@@ -4130,7 +4132,7 @@ else
 			end;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to get whether the local player is using the tool gun.
@@ -4158,7 +4160,7 @@ else
 			return false;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to get the target ID data.
@@ -4167,7 +4169,7 @@ else
 	function Clockwork.kernel:GetTargetIDData()
 		return Clockwork.TargetIDData;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to calculate the screen fading.
@@ -4182,7 +4184,7 @@ else
 					Clockwork.BlackFadeIn = 0;
 				end;
 			end;
-			
+
 			Clockwork.BlackFadeIn = mathClamp(Clockwork.BlackFadeIn + (FrameTime() * 20), 0, 255);
 			Clockwork.BlackFadeOut = nil;
 			self:DrawSimpleGradientBox(0, 0, 0, ScrW(), ScrH(), Color(0, 0, 0, Clockwork.BlackFadeIn));
@@ -4190,20 +4192,20 @@ else
 			if (Clockwork.BlackFadeIn) then
 				Clockwork.BlackFadeOut = Clockwork.BlackFadeIn;
 			end;
-			
+
 			Clockwork.BlackFadeIn = nil;
-			
+
 			if (Clockwork.BlackFadeOut) then
 				Clockwork.BlackFadeOut = mathClamp(Clockwork.BlackFadeOut - (FrameTime() * 40), 0, 255);
 				self:DrawSimpleGradientBox(0, 0, 0, ScrW(), ScrH(), Color(0, 0, 0, Clockwork.BlackFadeOut));
-				
+
 				if (Clockwork.BlackFadeOut == 0) then
 					Clockwork.BlackFadeOut = nil;
 				end;
 			end;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to draw a cinematic.
@@ -4214,29 +4216,29 @@ else
 	function Clockwork.kernel:DrawCinematic(cinematicTable, curTime)
 		local maxBarLength = cinematicTable.barLength or (ScrH() / 13);
 		local font = cinematicTable.font or Clockwork.option:GetFont("cinematic_text");
-		
+
 		if (cinematicTable.goBack and curTime > cinematicTable.goBack) then
 			cinematicTable.add = mathClamp(cinematicTable.add - 2, 0, maxBarLength);
-			
+
 			if (cinematicTable.add == 0) then
 				tableRemove(Clockwork.Cinematics, 1);
 				cinematicTable = nil;
 			end;
 		else
 			cinematicTable.add = mathClamp(cinematicTable.add + 1, 0, maxBarLength);
-			
+
 			if (cinematicTable.add == maxBarLength and !cinematicTable.goBack) then
 				cinematicTable.goBack = curTime + cinematicTable.hangTime;
 			end;
 		end;
-		
+
 		if (cinematicTable) then
 			draw.RoundedBox(0, 0, -maxBarLength + cinematicTable.add, ScrW(), maxBarLength, Color(0, 0, 0, 255));
 			draw.RoundedBox(0, 0, ScrH() - cinematicTable.add, ScrW(), maxBarLength, Color(0, 0, 0, 255));
 			draw.SimpleText(cinematicTable.text, font, ScrW() / 2, (ScrH() - cinematicTable.add) + (maxBarLength / 2), cinematicTable.color, 1, 1);
 		end
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to draw the cinematic introduction.
@@ -4246,11 +4248,11 @@ else
 	function Clockwork.kernel:DrawCinematicIntro(curTime)
 		local cinematicInfo = Clockwork.plugin:Call("GetCinematicIntroInfo");
 		local colorWhite = Clockwork.option:GetColor("white");
-		
+
 		if (cinematicInfo) then
 			if (Clockwork.CinematicScreenAlpha and Clockwork.CinematicScreenTarget) then
 				Clockwork.CinematicScreenAlpha = mathApproach(Clockwork.CinematicScreenAlpha, Clockwork.CinematicScreenTarget, 1);
-				
+
 				if (Clockwork.CinematicScreenAlpha == Clockwork.CinematicScreenTarget) then
 					if (Clockwork.CinematicScreenTarget == 255) then
 						if (!Clockwork.CinematicScreenGoBack) then
@@ -4261,16 +4263,16 @@ else
 						Clockwork.CinematicScreenDone = true;
 					end;
 				end;
-				
+
 				if (Clockwork.CinematicScreenGoBack and curTime >= Clockwork.CinematicScreenGoBack) then
 					Clockwork.CinematicScreenGoBack = nil;
 					Clockwork.CinematicScreenTarget = 0;
 					Clockwork.option:PlaySound("rollover");
 				end;
-				
+
 				if (!Clockwork.CinematicScreenDone and cinematicInfo.credits) then
 					local alpha = mathClamp(Clockwork.CinematicScreenAlpha, 0, 255);
-					
+
 					self:OverrideMainFont(Clockwork.option:GetFont("intro_text_tiny"));
 						self:DrawSimpleText(cinematicInfo.credits, ScrW() / 8, ScrH() * 0.75, Color(colorWhite.r, colorWhite.g, colorWhite.b, alpha));
 					self:OverrideMainFont(false);
@@ -4282,7 +4284,7 @@ else
 			end;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to draw the cinematic introduction bars.
@@ -4291,25 +4293,25 @@ else
 	function Clockwork.kernel:DrawCinematicIntroBars()
 		if (Clockwork.config:Get("draw_intro_bars"):Get()) then
 			local maxBarLength = ScrH() / 8;
-			
+
 			if (!Clockwork.CinematicBarsTarget and !Clockwork.CinematicBarsAlpha) then
 				Clockwork.CinematicBarsAlpha = 0;
 				Clockwork.CinematicBarsTarget = 255;
 				Clockwork.option:PlaySound("rollover");
 			end;
-			
+
 			Clockwork.CinematicBarsAlpha = mathApproach(Clockwork.CinematicBarsAlpha, Clockwork.CinematicBarsTarget, 1);
-			
+
 			if (Clockwork.CinematicScreenDone) then
 				if (Clockwork.CinematicScreenBarLength ~= 0) then
 					Clockwork.CinematicScreenBarLength = mathClamp((maxBarLength / 255) * Clockwork.CinematicBarsAlpha, 0, maxBarLength);
 				end;
-				
+
 				if (Clockwork.CinematicBarsTarget ~= 0) then
 					Clockwork.CinematicBarsTarget = 0;
 					Clockwork.option:PlaySound("rollover");
 				end;
-				
+
 				if (Clockwork.CinematicBarsAlpha == 0) then
 					Clockwork.CinematicBarsDrawn = true;
 				end;
@@ -4319,15 +4321,15 @@ else
 				else
 					Clockwork.IntroBarsMultiplier = mathClamp(Clockwork.IntroBarsMultiplier + (FrameTime() * 8), 1, 12);
 				end;
-				
+
 				Clockwork.CinematicScreenBarLength = mathClamp((maxBarLength / 255) * mathClamp(Clockwork.CinematicBarsAlpha * Clockwork.IntroBarsMultiplier, 0, 255), 0, maxBarLength);
 			end;
-			
+
 			draw.RoundedBox(0, 0, 0, ScrW(), Clockwork.CinematicScreenBarLength, Color(0, 0, 0, 255));
 			draw.RoundedBox(0, 0, ScrH() - Clockwork.CinematicScreenBarLength, ScrW(), maxBarLength, Color(0, 0, 0, 255));
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to draw the cinematic info.
@@ -4338,39 +4340,39 @@ else
 			Clockwork.CinematicInfoAlpha = 255;
 			Clockwork.CinematicInfoSlide = 0;
 		end;
-		
+
 		Clockwork.CinematicInfoSlide = mathApproach(Clockwork.CinematicInfoSlide, 255, 1);
-		
+
 		if (Clockwork.CinematicScreenAlpha and Clockwork.CinematicScreenTarget) then
 			Clockwork.CinematicInfoAlpha = mathApproach(Clockwork.CinematicInfoAlpha, 0, 1);
-			
+
 			if (Clockwork.CinematicInfoAlpha == 0) then
 				Clockwork.CinematicInfoDrawn = true;
 			end;
 		end;
-		
+
 		local cinematicInfo = Clockwork.plugin:Call("GetCinematicIntroInfo");
 		local colorWhite = Clockwork.option:GetColor("white");
 		local colorInfo = Clockwork.option:GetColor("information");
-		
+
 		if (cinematicInfo) then
 			local screenHeight = ScrH();
 			local screenWidth = ScrW();
 			local textPosScale = 1 - (Clockwork.CinematicInfoAlpha / 255);
 			local textPosY = (screenHeight * 0.35) - ((screenHeight * 0.15) * textPosScale);
 			local textPosX = screenWidth * 0.3;
-			
+
 			if (cinematicInfo.title) then
 				local cinematicInfoTitle = stringUpper(cinematicInfo.title);
 				local cinematicIntroText = stringUpper(cinematicInfo.text);
 				local introTextSmallFont = Clockwork.option:GetFont("intro_text_small");
 				local introTextBigFont = Clockwork.option:GetFont("intro_text_big");
-				local textWidth, textHeight = self:GetCachedTextSize(introTextBigFont, cinematicInfoTitle);
+				local _, textHeight = self:GetCachedTextSize(introTextBigFont, cinematicInfoTitle);
 				local boxAlpha = mathMin(Clockwork.CinematicInfoAlpha, 150);
-				
+
 				if (cinematicInfo.text) then
-					local smallTextWidth, smallTextHeight = self:GetCachedTextSize(introTextSmallFont, cinematicIntroText);
-					
+					local _, smallTextHeight = self:GetCachedTextSize(introTextSmallFont, cinematicIntroText);
+
 					self:DrawGradient(
 						GRADIENT_RIGHT, 0, textPosY - 80, screenWidth, textHeight + smallTextHeight + 160, Color(100, 100, 100, boxAlpha)
 					);
@@ -4379,11 +4381,11 @@ else
 						GRADIENT_RIGHT, 0, textPosY - 80, screenWidth, textHeight + 160, Color(100, 100, 100, boxAlpha)
 					);
 				end;
-				
+
 				self:OverrideMainFont(introTextBigFont);
 					self:DrawSimpleText(cinematicInfoTitle, textPosX, textPosY, Color(colorInfo.r, colorInfo.g, colorInfo.b, Clockwork.CinematicInfoAlpha), nil, nil, true);
 				self:OverrideMainFont(false);
-				
+
 				if (cinematicInfo.text) then
 					self:OverrideMainFont(introTextSmallFont);
 						self:DrawSimpleText(cinematicIntroText, textPosX, textPosY + textHeight + 8, Color(colorWhite.r, colorWhite.g, colorWhite.b, Clockwork.CinematicInfoAlpha), nil, nil, true);
@@ -4396,7 +4398,7 @@ else
 			end;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to draw some door text.
@@ -4410,77 +4412,76 @@ else
 	--]]
 	function Clockwork.kernel:DrawDoorText(entity, eyePos, eyeAngles, font, nameColor, textColor)
 		local entityColor = entity:GetColor();
-		
+
 		if (entityColor.a <= 0 or entity:IsEffectActive(EF_NODRAW)) then
 			return;
 		end;
-		
+
 		local doorData = Clockwork.entity:CalculateDoorTextPosition(entity);
-		
+
 		if (!doorData.hitWorld) then
 			local frontY = -26;
 			local backY = -26;
 			local alpha = self:CalculateAlphaFromDistance(256, eyePos, entity:GetPos());
-			
+
 			if (alpha <= 0) then
 				return;
 			end;
-			
-			local owner = Clockwork.entity:GetOwner(entity);
+
 			local name = Clockwork.plugin:Call("GetDoorInfo", entity, DOOR_INFO_NAME);
 			local text = Clockwork.plugin:Call("GetDoorInfo", entity, DOOR_INFO_TEXT);
-			
+
 			if (name) then name = L(name); end;
 			if (text) then text = L(text); end;
-			
+
 			if (name or text) then
 				local nameWidth, nameHeight = self:GetCachedTextSize(font, name or "");
 				local textWidth, textHeight = self:GetCachedTextSize(font, text or "");
 				local longWidth = nameWidth;
 				local boxAlpha = mathMin(alpha, 150);
-				
+
 				if (textWidth > longWidth) then
 					longWidth = textWidth;
 				end;
-				
+
 				local scale = mathAbs((doorData.width * 0.75) / longWidth);
 				local nameScale = mathMin(scale, 0.05);
 				local textScale = mathMin(scale, 0.03);
 				local longHeight = nameHeight + textHeight + 8;
-				
+
 				cam.Start3D2D(doorData.position, doorData.angles, nameScale);
 					self:DrawGradient(GRADIENT_CENTER, -(longWidth / 2) - 128, frontY - 8, longWidth + 256, longHeight, Color(100, 100, 100, boxAlpha));
 				cam.End3D2D();
-				
+
 				cam.Start3D2D(doorData.positionBack, doorData.anglesBack, nameScale);
 					self:DrawGradient(GRADIENT_CENTER, -(longWidth / 2) - 128, frontY - 8, longWidth + 256, longHeight, Color(100, 100, 100, boxAlpha));
 				cam.End3D2D();
-				
+
 				if (name) then
 					if (!text or text == "") then
-						nameColor = textColor or nameColor; 
+						nameColor = textColor or nameColor;
 					end;
-					
+
 					cam.Start3D2D(doorData.position, doorData.angles, nameScale);
 						self:OverrideMainFont(font);
 							frontY = self:DrawInfo(name, 0, frontY, nameColor, alpha, nil, nil, 3);
 						self:OverrideMainFont(false);
 					cam.End3D2D();
-					
+
 					cam.Start3D2D(doorData.positionBack, doorData.anglesBack, nameScale);
 						self:OverrideMainFont(font);
 							backY = self:DrawInfo(name, 0, backY, nameColor, alpha, nil, nil, 3);
 						self:OverrideMainFont(false);
 					cam.End3D2D();
 				end;
-				
+
 				if (text) then
 					cam.Start3D2D(doorData.position, doorData.angles, textScale);
 						self:OverrideMainFont(font);
 							frontY = self:DrawInfo(text, 0, frontY, textColor, alpha, nil, nil, 3);
 						self:OverrideMainFont(false);
 					cam.End3D2D();
-					
+
 					cam.Start3D2D(doorData.positionBack, doorData.anglesBack, textScale);
 						self:OverrideMainFont(font);
 							backY = self:DrawInfo(text, 0, backY, textColor, alpha, nil, nil, 3);
@@ -4567,27 +4568,27 @@ else
 	--]]
 	function Clockwork.kernel:RestoreSchemaData(fileName, failSafe)
 		if (self:SchemaDataExists(fileName)) then
-			local data = _file.Read("clockwork/schemas/"..self:GetSchemaFolder().."/"..fileName..".txt", "DATA");
-			
+			local data = _file.Read("clockwork/schemas/" .. self:GetSchemaFolder() .. "/" .. fileName .. ".txt", "DATA");
+
 			if (data) then
 				local wasSuccess, value = pcall(util.JSONToTable, data);
-				
+
 				if (wasSuccess and value ~= nil) then
 					return value;
 				else
-					local wasSuccess, value = pcall(self.Deserialize, self, data);
-					
+					wasSuccess, value = pcall(self.Deserialize, self, data);
+
 					if (wasSuccess and value ~= nil) then
 						return value;
 					else
-						MsgC(Color(255, 100, 0, 255), "[Clockwork:Kernel] '"..fileName.."' schema data has failed to restore.\n"..value.."\n");
-						
+						MsgC(Color(255, 100, 0, 255), "[Clockwork:Kernel] '" .. fileName .. "' schema data has failed to restore.\n" .. value .. "\n");
+
 						self:DeleteSchemaData(fileName);
 					end;
 				end;
 			end;
 		end;
-		
+
 		if (failSafe ~= nil) then
 			return failSafe;
 		else
@@ -4641,12 +4642,12 @@ else
 	--]]
 	function Clockwork.kernel:SaveClockworkData(fileName, data)
 		if (!istable(data)) then
-			MsgC(Color(255, 100, 0, 255), "[Clockwork:Kernel] The '"..fileName.."' clockwork data has failed to save.\nUnable to save type "..type(data)..", table required.\n");
-			
+			MsgC(Color(255, 100, 0, 255), "[Clockwork:Kernel] The '" .. fileName .. "' clockwork data has failed to save.\nUnable to save type " .. type(data) .. ", table required.\n");
+
 			return;
-		end;	
-	
-		_file.Write("clockwork/"..fileName..".txt", self:Serialize(data));
+		end;
+
+		_file.Write("clockwork/" .. fileName .. ".txt", self:Serialize(data));
 	end;
 
 	--[[
@@ -4656,7 +4657,7 @@ else
 		@returns {Unknown}
 	--]]
 	function Clockwork.kernel:ClockworkDataExists(fileName)
-		return _file.Exists("clockwork/"..fileName..".txt", "DATA");
+		return _file.Exists("clockwork/" .. fileName .. ".txt", "DATA");
 	end;
 
 	--[[
@@ -4666,9 +4667,9 @@ else
 		@returns {Unknown}
 	--]]
 	function Clockwork.kernel:DeleteClockworkData(fileName)
-		_file.Delete("clockwork/"..fileName..".txt");
+		_file.Delete("clockwork/" .. fileName .. ".txt");
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to run a Clockwork command.
@@ -4679,7 +4680,7 @@ else
 	function Clockwork.kernel:RunCommand(command, ...)
 		RunConsoleCommand("cw", command, ...);
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to get whether the local player is choosing a character.
@@ -4692,7 +4693,7 @@ else
 			return true;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Shared
 		@details A function to include the schema.
@@ -4700,9 +4701,9 @@ else
 	--]]
 	function Clockwork.kernel:IncludeSchema()
 		local schemaFolder = self:GetSchemaFolder();
-		
+
 		if (schemaFolder and type(schemaFolder) == "string") then
-			Clockwork.plugin:Include(schemaFolder.."/schema", true);
+			Clockwork.plugin:Include(schemaFolder .. "/schema", true);
 		end;
 	end;
 end;
@@ -4721,39 +4722,39 @@ function Clockwork.kernel:ExplodeByTags(text, seperator, open, close, hide)
 	local results = {};
 	local current = "";
 	local tag = nil;
-	
+
 	for i = 1, #text do
 		local character = stringSub(text, i, i);
-		
+
 		if (!tag) then
 			if (character == open) then
 				if (!hide) then
-					current = current..character;
+					current = current .. character;
 				end;
-				
+
 				tag = true;
 			elseif (character == seperator) then
 				results[#results + 1] = current; current = "";
 			else
-				current = current..character;
+				current = current .. character;
 			end;
 		else
 			if (character == close) then
 				if (!hide) then
-					current = current..character;
+					current = current .. character;
 				end;
-				
+
 				tag = nil;
 			else
-				current = current..character;
+				current = current .. character;
 			end;
 		end;
 	end;
-	
+
 	if (current ~= "") then
 		results[#results + 1] = current;
 	end;
-	
+
 	return results;
 end;
 
@@ -4766,12 +4767,12 @@ end;
 function Clockwork.kernel:ModifyPhysDesc(description)
 	if (stringLen(description) <= 256) then
 		if (!stringFind(stringSub(description, -2), "%p")) then
-			return description..".";
+			return description .. ".";
 		else
 			return description;
 		end;
 	else
-		return stringSub(description, 1, 253).."...";
+		return stringSub(description, 1, 253) .. "...";
 	end;
 end;
 
@@ -4786,7 +4787,7 @@ local MAGIC_CHARACTERS = "([%(%)%.%%%+%-%*%?%[%^%$])";
 	@returns {Unknown}
 --]]
 function Clockwork.kernel:Replace(text, find, replace)
-	return (text:gsub(find:gsub(MAGIC_CHARACTERS, "%%%1"), replace));
+	return text:gsub(find:gsub(MAGIC_CHARACTERS, "%%%1"), replace);
 end;
 
 --[[
@@ -4812,10 +4813,10 @@ end;
 --]]
 function Clockwork.kernel:MakeProxyTable(baseTable, baseClass, proxy)
 	baseTable[proxy] = {};
-	
+
 	baseTable.__index = function(object, key)
 		local value = rawget(object, key);
-		
+
 		if (type(value) == "function") then
 			return value;
 		elseif (object.__proxy) then
@@ -4824,23 +4825,23 @@ function Clockwork.kernel:MakeProxyTable(baseTable, baseClass, proxy)
 			return object[proxy][key];
 		end;
 	end;
-	
+
 	baseTable.__newindex = function(object, key, value)
 		if (type(value) ~= "function") then
 			object[proxy][key] = value;
 			return;
 		end;
-		
+
 		rawset(object, key, value);
 	end;
-	
+
 	for k, v in pairs(baseTable) do
 		if (type(v) ~= "function" and k ~= proxy) then
 			baseTable[proxy][k] = v;
 			baseTable[k] = nil;
 		end;
 	end;
-	
+
 	setmetatable(baseTable, baseClass);
 end;
 
@@ -4868,20 +4869,20 @@ end;
 --]]
 function Clockwork.kernel:AddDirectory(directory, bRecursive)
 	if (stringSub(directory, -1) == "/") then
-		directory = directory.."*.*";
+		directory = directory .. "*.*";
 	end;
-	
+
 	local files, folders = _file.Find(directory, "GAME", "namedesc");
-	local rawDirectory = stringMatch(directory, "(.*)/").."/";
-	
+	local rawDirectory = stringMatch(directory, "(.*)/") .. "/";
+
 	for k, v in pairs(files) do
-		self:AddFile(rawDirectory..v);
+		self:AddFile(rawDirectory .. v);
 	end;
-	
+
 	if (bRecursive) then
 		for k, v in pairs(folders) do
 			if (v ~= ".." and v ~= ".") then
-				self:AddDirectory(rawDirectory..v, true);
+				self:AddDirectory(rawDirectory .. v, true);
 			end;
 		end;
 	end;
@@ -4897,7 +4898,7 @@ function Clockwork.kernel:AddFile(fileName)
 	if (_file.Exists(fileName, "GAME")) then
 		resource.AddFile(fileName);
 	else
-		-- print(Format("[Clockwork] File does not exist: %s.", fileName));
+		print(Format("[Clockwork] File does not exist: %s", fileName));
 	end;
 end;
 
@@ -4910,15 +4911,15 @@ end;
 --]]
 function Clockwork.kernel:IncludeDirectory(directory, bFromBase)
 	if (bFromBase) then
-		directory = "clockwork/framework/"..directory;
+		directory = "clockwork/framework/" .. directory;
 	end;
-	
+
 	if (stringSub(directory, -1) ~= "/") then
-		directory = directory.."/";
+		directory = directory .. "/";
 	end;
-	
-	for k, v in pairs(_file.Find(directory.."*.lua", "LUA", "namedesc")) do
-		self:IncludePrefixed(directory..v);
+
+	for k, v in pairs(_file.Find(directory .. "*.lua", "LUA", "namedesc")) do
+		self:IncludePrefixed(directory .. v);
 	end;
 end;
 
@@ -4932,22 +4933,22 @@ function Clockwork.kernel:IncludePrefixed(fileName)
 	local isShared = (stringFind(fileName, "sh_") or stringFind(fileName, "shared.lua"));
 	local isClient = (stringFind(fileName, "cl_") or stringFind(fileName, "cl_init.lua"));
 	local isServer = (stringFind(fileName, "sv_"));
-	
+
 	if (isServer and !SERVER) then
 		return;
 	end;
-	
+
 	if (isShared and SERVER) then
 		AddCSLuaFile(fileName);
 	elseif (isClient and SERVER) then
 		AddCSLuaFile(fileName);
 		return;
 	end;
-	
+
 	local success, err = pcall(include, fileName);
-	
+
 	if (!success) then
-		MsgN("[Clockwork] File System -> "..err);
+		MsgN("[Clockwork] File System -> " .. err);
 	end;
 end;
 
@@ -4960,21 +4961,21 @@ end;
 --]]
 function Clockwork.kernel:IncludePlugins(directory, bFromBase)
 	if (bFromBase) then
-		directory = "Clockwork/"..directory;
+		directory = "Clockwork/" .. directory;
 	end;
-	
+
 	if (stringSub(directory, -1) ~= "/") then
-		directory = directory.."/";
+		directory = directory .. "/";
 	end;
-	
-	local files, pluginFolders = _file.Find(directory.."*", "LUA", "namedesc");
-	
+
+	local _, pluginFolders = _file.Find(directory .. "*", "LUA", "namedesc");
+
 	for k, v in pairs(pluginFolders) do
 		if (v ~= ".." and v ~= ".") then
-			Clockwork.plugin:Include(directory..v.."/plugin");
+			Clockwork.plugin:Include(directory .. v .. "/plugin");
 		end;
-	end;	
-	
+	end;
+
 	return true;
 end;
 
@@ -4986,20 +4987,18 @@ end;
 --]]
 function Clockwork.kernel:CallTimerThink(curTime)
 	for k, v in pairs(Clockwork.Timers) do
-		if (!v.paused) then
-			if (curTime >= v.nextCall) then
-				local wasSuccess, value = pcall(v.Callback, unpack(v.arguments));
-				
-				if (!wasSuccess) then
-					MsgC(Color(255, 100, 0, 255), "[Clockwork:Kernel] The '"..tostring(k).."' timer has failed to run.\n"..value.."\n");
-				end;
-				
-				v.nextCall = curTime + v.delay;
-				v.calls = v.calls + 1;
-				
-				if (v.calls == v.repetitions) then
-					Clockwork.Timers[k] = nil;
-				end;
+		if (!v.paused) and (curTime >= v.nextCall) then
+			local wasSuccess, value = pcall(v.Callback, unpack(v.arguments));
+
+			if (!wasSuccess) then
+				MsgC(Color(255, 100, 0, 255), "[Clockwork:Kernel] The '" .. tostring(k) .. "' timer has failed to run.\n" .. value .. "\n");
+			end;
+
+			v.nextCall = curTime + v.delay;
+			v.calls = v.calls + 1;
+
+			if (v.calls == v.repetitions) then
+				Clockwork.Timers[k] = nil;
 			end;
 		end;
 	end;
@@ -5093,23 +5092,23 @@ end;
 function Clockwork.kernel:HasObjectAccess(player, object)
 	local hasAccess = false;
 	local faction = player:GetFaction();
-	
+
 	if (object.access) then
 		if (Clockwork.player:HasAnyFlags(player, object.access)) then
 			hasAccess = true;
 		end;
 	end;
-	
+
 	if (object.factions) then
 		if (tableHasValue(object.factions, faction)) then
 			hasAccess = true;
 		end;
 	end;
-	
+
 	if (object.classes) then
 		local team = player:Team();
 		local class = Clockwork.class:FindByID(team);
-		
+
 		if (class) then
 			if (tableHasValue(object.classes, team)
 			or tableHasValue(object.classes, class.name)) then
@@ -5117,7 +5116,7 @@ function Clockwork.kernel:HasObjectAccess(player, object)
 			end;
 		end;
 	end;
-	
+
 	if (object.traits) then
 		for k, v in ipairs(object.traits) do
 			if (player:HasTrait(v)) then
@@ -5126,16 +5125,16 @@ function Clockwork.kernel:HasObjectAccess(player, object)
 			end;
 		end;
 	end;
-	
+
 	if (!object.access and !object.factions
 	and !object.classes) then
 		hasAccess = true;
 	end;
-	
+
 	if (object.blacklist) then
 		local team = player:Team();
 		local class = Clockwork.class:FindByID(team);
-		
+
 		if (tableHasValue(object.blacklist, faction)) then
 			hasAccess = false;
 		elseif (class) then
@@ -5155,11 +5154,11 @@ function Clockwork.kernel:HasObjectAccess(player, object)
 			end;
 		end;
 	end;
-	
+
 	if (object.HasObjectAccess) then
 		return object:HasObjectAccess(player, hasAccess);
 	end;
-	
+
 	return hasAccess;
 end;
 
@@ -5171,15 +5170,15 @@ end;
 function Clockwork.kernel:GetSortedCommands()
 	local commands = {};
 	local source = Clockwork.command.stored;
-	
+
 	for k, v in pairs(source) do
 		commands[#commands + 1] = k;
 	end;
-	
+
 	tableSort(commands, function(a, b)
 		return a < b;
 	end);
-	
+
 	return commands;
 end;
 
@@ -5191,7 +5190,7 @@ end;
 	@returns {Unknown}
 --]]
 function Clockwork.kernel:ZeroNumberToDigits(number, digits)
-	return stringRep("0", mathClamp(digits - stringLen(tostring(number)), 0, digits))..tostring(number);
+	return stringRep("0", mathClamp(digits - stringLen(tostring(number)), 0, digits)) .. tostring(number);
 end;
 
 --[[
@@ -5231,19 +5230,19 @@ end;
 --]]
 function Clockwork.kernel:GetPhysicsEntities()
 	local entities = {};
-	
+
 	for k, v in pairs(ents.FindByClass("prop_physicsmultiplayer")) do
 		if (IsValid(v)) then
 			entities[#entities + 1] = v;
 		end;
 	end;
-	
+
 	for k, v in pairs(ents.FindByClass("prop_physics")) do
 		if (IsValid(v)) then
 			entities[#entities + 1] = v;
 		end;
 	end;
-	
+
 	return entities;
 end;
 
@@ -5264,7 +5263,7 @@ function Clockwork.kernel:CreateMulticallTable(baseTable, object)
 			end
 		end
 	setmetatable(baseTable, metaTable);
-	
+
 	return baseTable;
 end;
 
@@ -5339,16 +5338,16 @@ end;
 function Clockwork.kernel:SetSharedVar(key, value, sharedTable)
 	if (!sharedTable) then
 		local sharedVars = self:GetSharedVars():Global();
-	
+
 		if (sharedVars and sharedVars[key]) then
 			local class = self:ConvertNetworkedClass(sharedVars[key].class);
 			if (class) then
 				if (value == nil) then
 					value = self:GetDefaultClassValue(class);
 				end;
-				local success, err = pcall(_G["SetGlobal"..class], key, value);
+				local success, err = pcall(_G["SetGlobal" .. class], key, value);
 				if (!success) then
-					MsgC(Color(255, 100, 0, 255), "[Clockwork:GlobalSharedVars] Attempted to set SharedVar '"..key.."' of type '"..class.."' with value of type '"..type(value).."'.\n"..err.."\n");
+					MsgC(Color(255, 100, 0, 255), "[Clockwork:GlobalSharedVars] Attempted to set SharedVar '" .. key .. "' of type '" .. class .. "' with value of type '" .. type(value) .. "'.\n" .. err .. "\n");
 				end;
 				return;
 			end;
@@ -5384,14 +5383,14 @@ function Clockwork.kernel:GetSharedVar(key, sharedTable)
 		local sharedVars = self:GetSharedVars():Global();
 		if (sharedVars and sharedVars[key]) then
 			local class = self:ConvertNetworkedClass(sharedVars[key].class);
-		
+
 			if (class) then
-				return _G["GetGlobal"..class](key);
+				return _G["GetGlobal" .. class](key);
 			end;
 		end;
 	else
 		sharedTable = Clockwork.SharedTables[sharedTable];
-		
+
 		if (sharedTable) then
 			return sharedTable[key];
 		end;
@@ -5412,14 +5411,14 @@ end;
 function Clockwork.kernel:FakeDamageInfo(damage, inflictor, attacker, position, damageType, damageForce)
 	local damageInfo = DamageInfo();
 	local realDamage = mathCeil(mathMax(damage, 0));
-	
+
 	damageInfo:SetDamagePosition(position);
 	damageInfo:SetDamageForce(Vector() * damageForce);
 	damageInfo:SetDamageType(damageType);
 	damageInfo:SetInflictor(inflictor);
 	damageInfo:SetAttacker(attacker);
 	damageInfo:SetDamage(realDamage);
-	
+
 	return damageInfo;
 end;
 
@@ -5441,41 +5440,41 @@ end;
 --]]
 function Clockwork.kernel:ParseData(text)
 	local classes = {"%^", "%!"};
-	
+
 	for k, v in pairs(classes) do
-		for key in stringGmatch(text, v.."(.-)"..v) do
+		for key in stringGmatch(text, v .. "(.-)" .. v) do
 			local lower = false;
 			local amount;
-			
+
 			if (stringSub(key, 1, 1) == "(" and stringSub(key, -1) == ")") then
 				lower = true;
 				amount = tonumber(stringSub(key, 2, -2));
 			else
 				amount = tonumber(key);
 			end;
-			
+
 			if (amount) then
-				text = stringGsub(text, v..stringGsub(key, "([%(%)])", "%%%1")..v, tostring(self:FormatCash(amount, k == 2, lower)));
+				text = stringGsub(text, v .. stringGsub(key, "([%(%)])", "%%%1") .. v, tostring(self:FormatCash(amount, k == 2, lower)));
 			end;
 		end;
 	end;
-	
+
 	for k in stringGmatch(text, "%*(.-)%*") do
 		k = stringGsub(k, "[%(%)]", "");
-		
+
 		if (k ~= "") then
-			text = stringGsub(text, "%*%("..k.."%)%*", tostring(Clockwork.option:Translate(k, true)));
-			text = stringGsub(text, "%*"..k.."%*", tostring(Clockwork.option:Translate(k)));
+			text = stringGsub(text, "%*%(" .. k .. "%)%*", tostring(Clockwork.option:Translate(k, true)));
+			text = stringGsub(text, "%*" .. k .. "%*", tostring(Clockwork.option:Translate(k)));
 		end;
 	end;
-	
+
 	if (CLIENT) then
 		for k in stringGmatch(text, ":(.-):") do
 			if (k ~= "" and input.LookupBinding(k)) then
-				text = self:Replace(text, ":"..k..":", "<"..stringUpper(tostring(input.LookupBinding(k)))..">");
+				text = self:Replace(text, ":" .. k .. ":", "<" .. stringUpper(tostring(input.LookupBinding(k))) .. ">");
 			end;
 		end;
 	end;
-	
+
 	return Clockwork.config:Parse(text);
 end;

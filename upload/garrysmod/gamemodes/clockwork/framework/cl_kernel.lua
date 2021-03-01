@@ -432,7 +432,7 @@ end);
 
 cwDatastream:Hook("AllAccessories", function(data)
 	Clockwork.AccessoryData = {};
-	
+
 	for k, v in pairs(data) do
 		Clockwork.AccessoryData[k] = v;
 	end;

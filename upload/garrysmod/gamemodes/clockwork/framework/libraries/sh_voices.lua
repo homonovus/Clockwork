@@ -52,7 +52,7 @@ function Clockwork.voices:RegisterGroup(group, gender, callback)
 	if (!gender) then
 		gender = false;
 	end;
-	
+
 	groups[group] = {
 		gender = gender,
 		IsPlayerMember = callback,
@@ -82,7 +82,7 @@ end;
 --]]
 function Clockwork.voices:Add(groupName, command, phrase, sound, female, menu, pitch, volume)
 	local group = groups[groupName];
-	
+
 	if (group) then
 		group.voices[#group.voices + 1] = {
 			command = command,
@@ -105,6 +105,6 @@ function Clockwork.voices:Add(groupName, command, phrase, sound, female, menu, p
 			]], nil, command);
 		end;
 	else
-		ErrorNoHalt("Attempted to add voice for invalid group '"..groupName.."'.\n");
+		ErrorNoHaltWithStack("Attempted to add voice for invalid group '" .. groupName .. "'.\n");
 	end;
 end;

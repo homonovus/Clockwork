@@ -24,11 +24,11 @@ end;
 function ENT:GetItemTable()
 	if (CLIENT) then
 		local index = self:GetDTInt(0);
-		
+
 		if (index != 0) then
 			return Clockwork.item:FindByID(index);
 		end;
 	end;
-	
+
 	return self.cwItemTable;
 end;

@@ -34,14 +34,14 @@ function cwStaticEnts:CanEntityStatic(entity)
 				return class;
 			end;
 		end;
-		
+
 		return false;
 	end;
 end;
 
 -- Called before the whitelist is checked when an entity is staticed.
 function cwStaticEnts:EditStaticWhitelist(whitelist)
-	table.Merge(whitelist, Clockwork.kernel:RestoreSchemaData("maps/"..game.GetMap().."/static_entities/whitelist"));
+	table.Merge(whitelist, Clockwork.kernel:RestoreSchemaData("maps/" .. game.GetMap() .. "/static_entities/whitelist"));
 end;
 
 -- A function to save an entity.
@@ -60,31 +60,33 @@ end;
 
 -- A function to load the static entities.
 function cwStaticEnts:LoadStaticEnts()
-	self.whitelist = Clockwork.kernel:RestoreSchemaData("maps/"..game.GetMap().."/static_entities/whitelist") or {};
-	self.staticMode = Clockwork.kernel:RestoreSchemaData("maps/"..game.GetMap().."/static_entities/static_mode") or {false};
-	local classTable = Clockwork.kernel:RestoreSchemaData("maps/"..game.GetMap().."/static_entities/classtable");
+	self.whitelist = Clockwork.kernel:RestoreSchemaData("maps/" .. game.GetMap() .. "/static_entities/whitelist") or {};
+	self.staticMode = Clockwork.kernel:RestoreSchemaData("maps/" .. game.GetMap() .. "/static_entities/static_mode") or {false};
+
+	local classTable = Clockwork.kernel:RestoreSchemaData("maps/" .. game.GetMap() .. "/static_entities/classtable");
 	local staticEnts = {};
+
 	self.staticEnts = {};
-	
+
 	if (classTable and type(classTable) == "table") then
 		for k, v in pairs(classTable) do
-			local loadTable = Clockwork.kernel:RestoreSchemaData("maps/"..game.GetMap().."/static_entities/"..v);
-			
+			local loadTable = Clockwork.kernel:RestoreSchemaData("maps/" .. game.GetMap() .. "/static_entities/" .. v);
+
 			if (loadTable and #loadTable > 0) then
 				for k2, v2 in ipairs(loadTable) do
 					table.insert(staticEnts, v2);
 				end;
 
 				if (v == "prop_physics") then
-					Clockwork.kernel:SaveSchemaData("maps/"..game.GetMap().."/static_entities/backup/"..v, loadTable);
-					Clockwork.kernel:DeleteSchemaData("maps/"..game.GetMap().."/static_entities/"..v);
+					Clockwork.kernel:SaveSchemaData("maps/" .. game.GetMap() .. "/static_entities/backup/" .. v, loadTable);
+					Clockwork.kernel:DeleteSchemaData("maps/" .. game.GetMap() .. "/static_entities/" .. v);
 				end;
 			end;
 		end;
 	end;
-	
-	local staticProps = Clockwork.kernel:RestoreSchemaData("plugins/props/"..game.GetMap());
-	
+
+	local staticProps = Clockwork.kernel:RestoreSchemaData("plugins/props/" .. game.GetMap());
+
 	if (staticProps and #staticProps > 0) then
 		for k, v in ipairs(staticProps) do
 			v.class = "prop_physics";
@@ -92,8 +94,8 @@ function cwStaticEnts:LoadStaticEnts()
 			table.insert(staticEnts, v);
 		end;
 	end;
-	
-	for k, v in pairs(staticEnts) do			
+
+	for k, v in pairs(staticEnts) do
 		local entity = ents.Create(v.class);
 
 		entity:SetMaterial(v.material);
@@ -129,7 +131,7 @@ end;
 -- A function to save the static entities.
 function cwStaticEnts:SaveStaticEnts()
 	local staticEnts = {};
-	
+
 	if (type(self.staticEnts) == "table") then
 		for k, v in pairs(self.staticEnts) do
 			if (IsValid(v)) then
@@ -139,7 +141,7 @@ function cwStaticEnts:SaveStaticEnts()
 
 				staticEnts[class] = staticEnts[class] or {};
 
-				entTable.class = class;			
+				entTable.class = class;
 				entTable.color = v:GetColor();
 				entTable.model = v:GetModel();
 				entTable.angles = v:GetAngles();
@@ -148,24 +150,24 @@ function cwStaticEnts:SaveStaticEnts()
 				entTable.renderMode = v:GetRenderMode();
 				entTable.renderFX = v:GetRenderFX();
 				entTable.ownerKey = v:GetOwnerKey();
-				
+
 				if (IsValid(physicsObject)) then
 					entTable.moveable = physicsObject:IsMoveable();
 				end;
 
 				Clockwork.plugin:Call("OnStaticEntitySaved", v, entTable);
-				
+
 				table.insert(staticEnts[class], entTable);
 			end;
 		end;
-		
+
 		local classTable = {};
-	
+
 		for k, v in pairs(staticEnts) do
 			if (k == "prop_physics") then
-				Clockwork.kernel:SaveSchemaData("plugins/props/"..game.GetMap(), v);
+				Clockwork.kernel:SaveSchemaData("plugins/props/" .. game.GetMap(), v);
 			else
-				Clockwork.kernel:SaveSchemaData("maps/"..game.GetMap().."/static_entities/"..k, v);
+				Clockwork.kernel:SaveSchemaData("maps/" .. game.GetMap() .. "/static_entities/"..k, v);
 
 				if (!classTable[k]) then
 					table.insert(classTable, k);
@@ -179,7 +181,7 @@ function cwStaticEnts:SaveStaticEnts()
 			end;
 		end;
 
-		Clockwork.kernel:SaveSchemaData("maps/"..game.GetMap().."/static_entities/classtable", classTable);
+		Clockwork.kernel:SaveSchemaData("maps/" .. game.GetMap() .. "/static_entities/classtable", classTable);
 	end;
 end;
 
@@ -188,13 +190,13 @@ function cwStaticEnts:OnStaticEntitySaved(entity, entTable)
 		entTable.texture = entity:GetFlashlightTexture();
 		entTable.fov = entity:GetLightFOV();
 		entTable.distance = entity:GetDistance();
-		entTable.brightness = entity:GetBrightness();	
+		entTable.brightness = entity:GetBrightness();
 	elseif (entity:GetClass() == "gmod_light") then
 		entTable.brightness = entity:GetBrightness();
 		entTable.size = entity:GetLightSize();
 	elseif (entity:GetClass() == "prop_ragdoll") then
 		local boneTable = {};
-					
+
 		for i = 0, entity:GetPhysicsObjectCount() - 1 do
 			local bone = entity:GetPhysicsObjectNum(i);
 			table.insert(boneTable, {
@@ -214,10 +216,10 @@ function cwStaticEnts:OnStaticEntityLoaded(entity, entTable)
 			local bone = entity:GetPhysicsObjectNum(k - 1);
 
 			bone:EnableMotion(v.moveable);
-			bone:Wake();					
+			bone:Wake();
 			bone:SetAngles(v.ang);
 			bone:SetPos(v.pos);
-							
+
 			if (v.wake == true) then
 				bone:Sleep();
 			end;
@@ -225,7 +227,7 @@ function cwStaticEnts:OnStaticEntityLoaded(entity, entTable)
 	elseif (IsValid(entity:GetPhysicsObject())) then
 		entity:GetPhysicsObject():EnableMotion(entTable.moveable);
 	end;
-					
+
 	if (entTable.texture) then
 		entity:SetFlashlightTexture(entTable.texture);
 		entity:SetLightFOV(entTable.fov);
@@ -234,7 +236,7 @@ function cwStaticEnts:OnStaticEntityLoaded(entity, entTable)
 		entity:SetToggle(false);
 		entity:Switch(true);
 	end;
-			
+
 	if (entTable.size) then
 		entity:SetBrightness(entTable.brightness);
 		entity:SetLightSize(entTable.size);

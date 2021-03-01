@@ -61,14 +61,14 @@ function ITEM:OnUse(player, itemEntity)
 	else
 		Clockwork.player:Notify(player, {"CannotActionRightNow"});
 	end;
-	
+
 	return false;
 end;
 
 if (CLIENT) then
 	function ITEM:GetClientSideInfo()
 		if (!self:IsInstance()) then return; end;
-		
+
 		if (Clockwork.player:IsWearingAccessory(self)) then
 			return L("ItemInfoIsWearingYes");
 		else

@@ -27,34 +27,34 @@ function ENT:GetRealPosition()
 	local itemTable = self:GetItemTable();
 	local player = self:GetPlayer();
 	local bone = player:LookupBone(self:GetBone());
-	
+
 	if (offsetVector and offsetAngle and player and bone) then
 		local position, angles = player:GetBonePosition(bone);
 		local ragdollEntity = player:GetRagdollEntity();
-		
+
 		if (itemTable.AdjustAttachmentOffsetInfo) then
 			local info = {
 				offsetVector = offsetVector,
 				offsetAngle = offsetAngle
 			};
-			
+
 			itemTable:AdjustAttachmentOffsetInfo(player, self, info);
 			offsetVector = info.offsetVector;
 			offsetAngle = info.offsetAngle;
 		end;
-		
+
 		if (ragdollEntity) then
 			position, angles = ragdollEntity:GetBonePosition(bone);
 		end;
-		
+
 		local x = angles:Up() * offsetVector.x;
 		local y = angles:Right() * offsetVector.y;
 		local z = angles:Forward() * offsetVector.z;
-		
+
 		angles:RotateAroundAxis(angles:Forward(), offsetAngle.p);
 		angles:RotateAroundAxis(angles:Right(), offsetAngle.y);
 		angles:RotateAroundAxis(angles:Up(), offsetAngle.r);
-		
+
 		return position + x + y + z, angles;
 	end;
 end;
@@ -69,21 +69,21 @@ end;
 function ENT:GetItemTable()
 	if (CLIENT) then
 		local itemTable = Clockwork.entity:FetchItemTable(self);
-		
+
 		if (!itemTable) then
 			return Clockwork.item:FindByID(self:GetDTInt(0));
 		else
 			return itemTable;
 		end;
 	end;
-	
+
 	return self.cwItemTable;
 end;
 
 -- A function to get the entity's player.
 function ENT:GetPlayer()
 	local player = self:GetOwner();
-	
+
 	if (IsValid(player) and player:IsPlayer()) then
 		return player;
 	end;

@@ -10,21 +10,13 @@ local cwConfig = Clockwork.config;
 local cwPly = Clockwork.player;
 local cwPlugin = Clockwork.plugin;
 local cwStorage = Clockwork.storage;
-local cwEvent = Clockwork.event;
-local cwLimb = Clockwork.limb;
 local cwItem = Clockwork.item;
-local cwEntity = Clockwork.entity;
 local cwKernel = Clockwork.kernel;
-local cwOption = Clockwork.option;
 local cwBans = Clockwork.bans;
 local cwAttribute = Clockwork.attribute;
 local cwAttributes = Clockwork.attributes;
-local cwDatabase = Clockwork.database;
 local cwDatastream = Clockwork.datastream;
-local cwFaction = Clockwork.faction;
 local cwInventory = Clockwork.inventory;
-local cwHint = Clockwork.hint;
-local cwCommand = Clockwork.command;
 local cwClass = Clockwork.class;
 local cwVoice = Clockwork.voice;
 
@@ -48,7 +40,7 @@ playerMeta.SteamName = playerMeta.SteamName or playerMeta.Name;
 
 function playerMeta:NetworkAccessories()
 	local accessoryData = self:GetAccessoryData();
-	
+
 	Clockwork.datastream:Start(self, "AllAccessories", accessoryData);
 end;
 
@@ -56,17 +48,16 @@ function playerMeta:RemoveAccessory(itemTable)
 	if (not self:IsWearingAccessory(itemTable)) then
 		return;
 	end;
-	
+
 	local accessoryData = self:GetAccessoryData();
-	local uniqueID = itemTable("uniqueID");
 	local itemID = itemTable("itemID");
-	
+
 	accessoryData[itemID] = nil;
-	
+
 	Clockwork.datastream:Start(
 		self, "RemoveAccessory", {itemID = itemID}
 	);
-	
+
 	if (itemTable.OnWearAccessory) then
 		itemTable:OnWearAccessory(self, false);
 	end;
@@ -74,20 +65,20 @@ end;
 
 function playerMeta:HasAccessory(uniqueID)
 	local accessoryData = self:GetAccessoryData();
-	
+
 	for k, v in pairs(accessoryData) do
 		if (string.lower(v) == string.lower(uniqueID)) then
 			return true;
 		end;
 	end;
-	
+
 	return false;
 end;
 
 function playerMeta:IsWearingAccessory(itemTable)
 	local accessoryData = self:GetAccessoryData();
 	local itemID = itemTable("itemID");
-	
+
 	if (accessoryData[itemID]) then
 		return true;
 	else
@@ -99,17 +90,17 @@ function playerMeta:WearAccessory(itemTable)
 	if (self:IsWearingAccessory(itemTable)) then
 		return;
 	end;
-	
+
 	local accessoryData = self:GetAccessoryData();
 	local uniqueID = itemTable("uniqueID");
 	local itemID = itemTable("itemID");
-	
+
 	accessoryData[itemID] = itemTable("uniqueID");
-	
+
 	Clockwork.datastream:Start(
 		self, "AddAccessory", {itemID = itemID, uniqueID = uniqueID}
 	);
-	
+
 	if (itemTable.OnWearAccessory) then
 		itemTable:OnWearAccessory(self, true);
 	end;
@@ -118,7 +109,7 @@ end;
 -- A function to get a player's steamID64
 function playerMeta:SteamID64()
 	local value = self:ClockworkSteamID64();
-	
+
 	if (value == nil) then
 		return "";
 	else
@@ -143,7 +134,7 @@ end;
 -- A function to set whether a player is faking death.
 function playerMeta:SetFakingDeath(fakingDeath, killSilent)
 	self.fakingDeath = fakingDeath;
-	
+
 	if (!fakingDeath and killSilent) then
 		self:KillSilent();
 	end;
@@ -167,7 +158,7 @@ end;
 -- A function to get whether a player has a trait.
 function playerMeta:HasTrait(uniqueID)
 	local traits = self:GetCharacterData("Traits");
-	
+
 	if (traits and table.HasValue(traits, uniqueID)) then
 		return true;
 	end;
@@ -176,18 +167,18 @@ end;
 -- A function to give a weapon to a player.
 function playerMeta:Give(class, itemTable, bForceReturn)
 	local iTeamIndex = self:Team();
-	
+
 	if (!cwPlugin:Call("PlayerCanBeGivenWeapon", self, class, itemTable)) then
 		return;
 	end;
-	
+
 	if (self:IsRagdolled() and !bForceReturn) then
 		local ragdollWeapons = self:GetRagdollWeapons();
 		local spawnWeapon = cwPly:GetSpawnWeapon(self, class);
 		local bCanHolster = (itemTable and cwPlugin:Call("PlayerCanHolsterWeapon", self, itemTable, true, true));
-		
+
 		if (!spawnWeapon) then iTeamIndex = nil; end;
-		
+
 		for k, v in pairs(ragdollWeapons) do
 			if (v.weaponData["class"] == class
 			and v.weaponData["itemTable"] == itemTable) then
@@ -196,7 +187,7 @@ function playerMeta:Give(class, itemTable, bForceReturn)
 				return;
 			end;
 		end;
-		
+
 		ragdollWeapons[#ragdollWeapons + 1] = {
 			weaponData = {
 				class = class,
@@ -209,26 +200,26 @@ function playerMeta:Give(class, itemTable, bForceReturn)
 		self.cwForceGive = true;
 			self:ClockworkGive(class);
 		self.cwForceGive = nil;
-		
+
 		local weapon = self:GetWeapon(class);
-		
+
 		if (IsValid(weapon) and itemTable) then
 			cwDatastream:Start(self, "WeaponItemData", {
 				definition = cwItem:GetDefinition(itemTable, true),
 				weapon = weapon:EntIndex()
 			});
-			
+
 			weapon:SetNetworkedString(
 				"ItemID", tostring(itemTable("itemID"))
 			);
 			weapon.cwItemTable = itemTable;
-			
+
 			if (itemTable.OnWeaponGiven) then
 				itemTable:OnWeaponGiven(self, weapon);
 			end;
 		end;
 	end;
-	
+
 	cwPlugin:Call("PlayerGivenWeapon", self, class, itemTable);
 end;
 
