@@ -15,7 +15,11 @@ AddCSLuaFile("shared.lua");
 function ENT:Initialize()
 	self:DrawShadow(true);
 	self:SetSolid(SOLID_BBOX);
-	self:PhysicsInit(SOLID_BBOX);
+
+	if SERVER then
+		self:PhysicsInit(SOLID_BBOX);
+	end;
+
 	self:SetMoveType(MOVETYPE_NONE);
 	self:SetUseType(SIMPLE_USE);
 end
