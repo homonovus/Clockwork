@@ -263,12 +263,12 @@ end;
 -- A function to save the salesmen.
 function cwSalesmen:SaveSalesmen()
 	local salesmen = {};
-	
+
 	for k, v in pairs(self.salesmen) do
 		if (IsValid(v)) then
 			salesmen[#salesmen + 1] = self:GetTableFromEntity(v);
 		end;
 	end;
-	
+
 	Clockwork.kernel:SaveSchemaData("plugins/salesmen/"..game.GetMap(), salesmen);
 end;

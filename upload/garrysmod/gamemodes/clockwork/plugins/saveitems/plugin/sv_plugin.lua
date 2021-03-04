@@ -82,17 +82,17 @@ end;
 -- A function to save the items.
 function cwSaveItems:SaveItems()
 	local items = {};
-	
+
 	for k, v in pairs(ents.FindByClass("cw_item")) do
 		local physicsObject = v:GetPhysicsObject();
 		local itemTable = v:GetItemTable();
 		local bMoveable = false;
-		
+
 		if (IsValid(physicsObject)) then
 			bMoveable = physicsObject:IsMoveable();
 		end;
-		
-		if (itemTable) then
+
+		if (itemTable and Clockwork.plugin:Call("ShouldSaveItem", v, itemTable)) then
 			items[#items + 1] = {
 				key = Clockwork.entity:QueryProperty(v, "key"),
 				item = itemTable("uniqueID"),
@@ -106,6 +106,6 @@ function cwSaveItems:SaveItems()
 			};
 		end;
 	end;
-	
-	Clockwork.kernel:SaveSchemaData("plugins/items/"..game.GetMap(), items);
+
+	Clockwork.kernel:SaveSchemaData("plugins/items/" .. game.GetMap(), items);
 end;

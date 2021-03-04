@@ -7,7 +7,6 @@
 --]]
 
 local Clockwork = Clockwork;
-local Json = Json;
 local tostring = tostring;
 local tonumber = tonumber;
 local IsValid = IsValid;
@@ -69,7 +68,7 @@ function Clockwork.player:CanHoldWeight(weight)
 	local inventoryWeight = Clockwork.inventory:CalculateWeight(
 		Clockwork.inventory:GetClient()
 	);
-	
+
 	if (inventoryWeight + weight > Clockwork.player:GetMaxWeight()) then
 		return false;
 	else
@@ -87,7 +86,7 @@ function Clockwork.player:CanHoldSpace(space)
 	local inventorySpace = Clockwork.inventory:CalculateSpace(
 		Clockwork.inventory:GetClient()
 	);
-	
+
 	if (inventorySpace + space > Clockwork.player:GetMaxSpace()) then
 		return false;
 	else
@@ -104,17 +103,17 @@ function Clockwork.player:GetMaxWeight()
 	local itemsList = Clockwork.inventory:GetAsItemsList(
 		Clockwork.inventory:GetClient()
 	);
-	
+
 	local weight = Clockwork.Client:GetSharedVar("InvWeight") or Clockwork.config:Get("default_inv_weight"):Get();
-	
+
 	for k, v in pairs(itemsList) do
 		local addInvWeight = v("addInvSpace");
-		
+
 		if (addInvWeight) then
 			weight = weight + addInvWeight;
 		end;
 	end;
-	
+
 	return weight;
 end;
 
@@ -128,15 +127,15 @@ function Clockwork.player:GetMaxSpace()
 		Clockwork.inventory:GetClient()
 	);
 	local space = Clockwork.Client:GetSharedVar("InvSpace") or Clockwork.config:Get("default_inv_space"):Get();
-	
+
 	for k, v in pairs(itemsList) do
 		local addInvSpace = v("addInvVolume");
-		
+
 		if (addInvSpace) then
 			space = space + addInvSpace;
 		end;
 	end;
-	
+
 	return space;
 end;
 
@@ -2671,7 +2670,7 @@ end;
 	@returns {Unknown}
 --]]
 function Clockwork.player:ConvertDataString(player, data)
-	local wasSuccess, value = pcall(cwJson.Decode, cwJson, data);
+	local wasSuccess, value = xpcall(cwJson.Decode, debug.traceback, cwJson, data);
 	
 	if (wasSuccess and value != nil) then
 		return value;
@@ -3909,7 +3908,7 @@ end;
 function Clockwork.player:IsProtected(identifier)
 	local steamID = nil;
 	local ownerSteamID = cwCfg:Get("owner_steamid"):Get();
-	local wasSuccess, value = pcall(IsValid, identifier);
+	local wasSuccess, value = xpcall(IsValid, debug.traceback, identifier);
 		
 	if (!wasSuccess or value == false) then
 		local playerObj = self:FindByID(identifier);
@@ -5070,7 +5069,7 @@ end;
 	@returns {Unknown}
 --]]
 function Clockwork.player:ConvertCharacterRecognisedNamesString(data)
-	local wasSuccess, value = pcall(cwJson.Decode, cwJson, data);
+	local wasSuccess, value = xpcall(cwJson.Decode, debug.traceback, cwJson, data);
 	
 	if (wasSuccess and value != nil) then
 		local recognisedNames = {};
@@ -5092,7 +5091,7 @@ end;
 	@returns {Unknown}
 --]]
 function Clockwork.player:ConvertCharacterDataString(data)
-	local wasSuccess, value = pcall(cwJson.Decode, cwJson, data);
+	local wasSuccess, value = xpcall(cwJson.Decode, debug.traceback, cwJson, data);
 	
 	if (wasSuccess and value != nil) then
 		return value;
@@ -5130,7 +5129,7 @@ function Clockwork.player:LoadData(player, Callback)
 				player.cwUserGroup = result[1]._UserGroup;
 				player.cwData = self:ConvertDataString(player, result[1]._Data);
 				
-				local wasSuccess, value = pcall(cwJson.Decode, cwJson, result[1]._Donations);
+				local wasSuccess, value = xpcall(cwJson.Decode, debug.traceback, cwJson, result[1]._Donations);
 				
 				if (wasSuccess and value != nil) then
 					player.cwDonations = value;

@@ -46,16 +46,16 @@ end);
 Clockwork.datastream:Hook("SalesmanAdd", function(data)
 	if (Clockwork.salesman:IsSalesmanOpen()) then
 		CloseDermaMenus();
-		
+
 		Clockwork.salesman.panel:Close();
 		Clockwork.salesman.panel:Remove();
 	end;
-	
+
 	Derma_StringRequest("Name", "What do you want the salesman's name to be?", "", function(text)
 		Clockwork.salesman.name = text;
-		
+
 		gui.EnableScreenClicker(true);
-		
+
 		Clockwork.salesman.showChatBubble = true;
 		Clockwork.salesman.buyInShipments = true;
 		Clockwork.salesman.priceScale = 1;
@@ -78,13 +78,13 @@ Clockwork.datastream:Hook("SalesmanAdd", function(data)
 		};
 		Clockwork.salesman.buys = {};
 		Clockwork.salesman.name = Clockwork.salesman.name;
-		
+
 		for k, v in pairs(Clockwork.item:GetAll()) do
 			if (!v("isBaseItem")) then
 				Clockwork.salesman.items[k] = v;
 			end;
 		end;
-		
+
 		Clockwork.salesman.panel = vgui.Create("cwSalesman");
 		Clockwork.salesman.panel:Rebuild();
 		Clockwork.salesman.panel:MakePopup();

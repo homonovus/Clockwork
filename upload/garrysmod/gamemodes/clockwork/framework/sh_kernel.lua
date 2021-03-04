@@ -33,7 +33,6 @@ local unpack = unpack;
 local Vector = Vector;
 local Color = Color;
 local pairs = pairs;
-local pcall = pcall;
 local type = type;
 local resource = resource;
 local string = string;
@@ -1156,7 +1155,7 @@ if (SERVER) then
 			local data = Clockwork.file:Read("settings/clockwork/schemas/" .. self:GetSchemaFolder() .. "/" .. fileName .. ".cw", "namedesc");
 
 			if (data) then
-				local wasSuccess, value = pcall(self.Deserialize, self, data);
+				local wasSuccess, value = xpcall(self.Deserialize, debug.traceback, self, data);
 
 				if (wasSuccess and value ~= nil) then
 					return value;
@@ -1187,7 +1186,7 @@ if (SERVER) then
 			local data = Clockwork.file:Read("settings/clockwork/" .. fileName .. ".cw");
 
 			if (data) then
-				local wasSuccess, value = pcall(util.JSONToTable, data);
+				local wasSuccess, value = xpcall(util.JSONToTable, debug.traceback, data);
 
 				if (wasSuccess and value ~= nil) then
 					return value;
@@ -4571,12 +4570,12 @@ else
 			local data = _file.Read("clockwork/schemas/" .. self:GetSchemaFolder() .. "/" .. fileName .. ".txt", "DATA");
 
 			if (data) then
-				local wasSuccess, value = pcall(util.JSONToTable, data);
+				local wasSuccess, value = xpcall(util.JSONToTable, debug.traceback, data);
 
 				if (wasSuccess and value ~= nil) then
 					return value;
 				else
-					wasSuccess, value = pcall(self.Deserialize, self, data);
+					wasSuccess, value = xpcall(self.Deserialize, debug.traceback, self, data);
 
 					if (wasSuccess and value ~= nil) then
 						return value;
@@ -4608,12 +4607,12 @@ else
 			local data = _file.Read("clockwork/" .. fileName .. ".txt", "DATA");
 
 			if (data) then
-				local success, value = pcall(util.JSONToTable, data);
+				local success, value = xpcall(util.JSONToTable, debug.traceback, data);
 
 				if (success and value ~= nil) then
 					return value;
 				else
-					success, value = pcall(self.Deserialize, self, data);
+					success, value = xpcall(self.Deserialize, debug.traceback, self, data);
 
 					if (success and value ~= nil) then
 						return value;
@@ -4945,7 +4944,7 @@ function Clockwork.kernel:IncludePrefixed(fileName)
 		return;
 	end;
 
-	local success, err = pcall(include, fileName);
+	local success, err = xpcall(include, debug.traceback, fileName);
 
 	if (!success) then
 		MsgN("[Clockwork] File System -> " .. err);
@@ -4988,7 +4987,7 @@ end;
 function Clockwork.kernel:CallTimerThink(curTime)
 	for k, v in pairs(Clockwork.Timers) do
 		if (!v.paused) and (curTime >= v.nextCall) then
-			local wasSuccess, value = pcall(v.Callback, unpack(v.arguments));
+			local wasSuccess, value = xpcall(v.Callback, debug.traceback, unpack(v.arguments));
 
 			if (!wasSuccess) then
 				MsgC(Color(255, 100, 0, 255), "[Clockwork:Kernel] The '" .. tostring(k) .. "' timer has failed to run.\n" .. value .. "\n");
@@ -5345,7 +5344,7 @@ function Clockwork.kernel:SetSharedVar(key, value, sharedTable)
 				if (value == nil) then
 					value = self:GetDefaultClassValue(class);
 				end;
-				local success, err = pcall(_G["SetGlobal" .. class], key, value);
+				local success, err = xpcall(_G["SetGlobal" .. class], debug.traceback, key, value);
 				if (!success) then
 					MsgC(Color(255, 100, 0, 255), "[Clockwork:GlobalSharedVars] Attempted to set SharedVar '" .. key .. "' of type '" .. class .. "' with value of type '" .. type(value) .. "'.\n" .. err .. "\n");
 				end;

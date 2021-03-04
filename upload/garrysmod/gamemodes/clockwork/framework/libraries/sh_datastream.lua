@@ -9,7 +9,6 @@
 local Clockwork = Clockwork;
 local net = net;
 local pairs = pairs;
-local pcall = pcall;
 local type = type;
 local util = util;
 
@@ -105,12 +104,12 @@ if (SERVER) then
 				player.cwDataStreamData = CW_DS_DATA;
 
 				if (Clockwork.datastream.stored[player.cwDataStreamName]) then
-					local wasSuccess, value = pcall(Clockwork.kernel.Deserialize, Clockwork.kernel, player.cwDataStreamData);
+					local wasSuccess, value = xpcall(Clockwork.kernel.Deserialize, debug.traceback, Clockwork.kernel, player.cwDataStreamData);
 
 					if (wasSuccess) then
 						Clockwork.datastream.stored[player.cwDataStreamName](player, value.data);
 					elseif (value != nil) then
-						MsgC(Color(255, 100, 0, 255), "[Clockwork:Datastream] The '"..CW_DS_NAME.."' datastream has failed to run.\n"..value.."\nData: "..tostring(player.cwDataStreamData).."\n");
+						MsgC(Color(255, 100, 0, 255), "[Clockwork:Datastream] The '" .. CW_DS_NAME .. "' datastream has failed to run.\n" .. value .. "\nData: " .. tostring(player.cwDataStreamData) .. "\n");
 					end;
 				end;
 
@@ -163,7 +162,7 @@ else
 		local CW_DS_DATA = net.ReadData(CW_DS_LENGTH);
 
 		if (CW_DS_NAME and CW_DS_DATA and CW_DS_LENGTH) and Clockwork.datastream.stored[CW_DS_NAME] then
-			local wasSuccess, value = pcall(Clockwork.kernel.Deserialize, Clockwork.kernel, CW_DS_DATA);
+			local wasSuccess, value = xpcall(Clockwork.kernel.Deserialize, debug.traceback, Clockwork.kernel, CW_DS_DATA);
 
 			if (wasSuccess) then
 				Clockwork.datastream.stored[CW_DS_NAME](value.data);

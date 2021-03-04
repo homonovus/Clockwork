@@ -11,7 +11,6 @@ local tonumber = tonumber;
 local tostring = tostring;
 local IsValid = IsValid;
 local pairs = pairs;
-local pcall = pcall;
 local type = type;
 local string = string;
 local table = table;
@@ -279,7 +278,7 @@ end;
 	@returns {Unknown}
 --]]
 function Clockwork.config:LoadINI(fileName, bFromGame, bStripQuotes)
-	local wasSuccess, value = pcall(file.Read, fileName, (bFromGame and "GAME" or "DATA"));
+	local wasSuccess, value = xpcall(file.Read, debug.traceback, fileName, (bFromGame and "GAME" or "DATA"));
 	
 	if (wasSuccess and value != nil) then
 		local explodedData = string.Explode("\n", value);

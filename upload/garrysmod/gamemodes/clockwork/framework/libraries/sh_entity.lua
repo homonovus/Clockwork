@@ -655,45 +655,45 @@ else
 		entity:SetNoDraw(true);
 		entity:EmitSound("physics/wood/wood_box_impact_hard3.wav");
 		entity:Fire("Unlock", "", 0);
-		
+
 		if (IsValid(entity.cwCombineLock)) then
 			entity.cwCombineLock:Explode();
 			entity.cwCombineLock:Remove();
 		end;
-		
+
 		if (IsValid(entity.cwBreachEnt)) then
 			entity.cwBreachEnt:BreachEntity();
 		end;
-		
+
 		local fakeDoor = ents.Create("prop_physics");
-		
+
 		fakeDoor:SetCollisionGroup(COLLISION_GROUP_WORLD);
 		fakeDoor:SetAngles(entity:GetAngles());
 		fakeDoor:SetModel(entity:GetModel());
 		fakeDoor:SetSkin(entity:GetSkin());
 		fakeDoor:SetPos(entity:GetPos());
 		fakeDoor:Spawn();
-		
+
 		Clockwork.entity:Decay(fakeDoor, 300);
-		
-		Clockwork.kernel:CreateTimer("ResetDoor"..entity:EntIndex(), 300, 1, function()
-			if (IsValid(door)) then
+
+		Clockwork.kernel:CreateTimer("ResetDoor" .. entity:EntIndex(), 300, 1, function()
+			if (IsValid(entity)) then
 				entity.cwIsBustedDown = nil;
 				entity:SetNotSolid(false);
 				entity:DrawShadow(true);
 				entity:SetNoDraw(false);
 			end;
 		end);
-		
+
 		local physicsObject = fakeDoor:GetPhysicsObject();
 		if (!IsValid(physicsObject)) then return; end;
-		
+
 		if (IsValid(attacker)) then
 			local position = entity:GetPos() - attacker:GetPos();
 				position:Normalize();
 			force = position * 10000;
 		end;
-		
+
 		if (force) then
 			physicsObject:ApplyForceCenter(force);
 		end;
@@ -802,7 +802,7 @@ if (SERVER) then
 		if (bPhysgunProtect) then
 			entity.PhysgunDisabled = true;
 		end;
-		
+
 		if (tToolProtect) then
 			entity.CanTool = function(entity, player, trace, tool)
 				if (type(tToolProtect) == "table") then
@@ -812,14 +812,14 @@ if (SERVER) then
 				end;
 			end;
 		end;
-		
+
 		if (bFreezeEntity) then
 			if (IsValid(entity:GetPhysicsObject())) then
 				entity:GetPhysicsObject():EnableMotion(false);
 			end;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to statue a ragdoll.
@@ -1579,15 +1579,15 @@ if (SERVER) then
 	--]]
 	function Clockwork.entity:CreateItem(ownerObj, itemTable, position, angles)
 		local entity = ents.Create("cw_item");
-		
+
 		if (!angles) then
 			angles = Angle(0, 0, 0);
 		end;
-		
+
 		if (type(itemTable) == "string") then
 			itemTable = Clockwork.item:CreateInstance(itemTable);
 		end;
-		
+
 		if (type(ownerObj) == "table") then
 			if (ownerObj.key and ownerObj.uniqueID) then
 				Clockwork.player:GivePropertyOffline(ownerObj.key, ownerObj.uniqueID, entity, true);
@@ -1595,29 +1595,29 @@ if (SERVER) then
 		elseif (IsValid(ownerObj) and ownerObj:IsPlayer()) then
 			Clockwork.player:GiveProperty(ownerObj, entity);
 		end;
-		
+
 		if (!itemTable:IsInstance()) then
 			itemTable = Clockwork.item:CreateInstance(itemTable("uniqueID"));
 		end;
-		
+
 		entity:SetItemTable(itemTable);
 		entity:SetAngles(angles);
 		entity:SetPos(position);
 		entity:Spawn();
-		
+
 		if (itemTable.OnEntitySpawned) then
 			itemTable:OnEntitySpawned(entity);
 		end;
-		
+
 		local itemBodyGroup = itemTable("bodyGroup");
-		
+
 		if (itemBodyGroup) then
 			entity:SetBodygroup(itemBodyGroup, 1);
 		end;
-		
+
 		return entity;
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to copy an entity's owner.
@@ -1629,10 +1629,10 @@ if (SERVER) then
 		local networked = self:QueryProperty(entity, "networked");
 		local uniqueID = self:QueryProperty(entity, "uniqueID");
 		local key = self:QueryProperty(entity, "key");
-		
+
 		Clockwork.player:GivePropertyOffline(key, uniqueID, target, networked, removeDelay);
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to get whether an entity belongs to a player's other character.
@@ -1643,16 +1643,14 @@ if (SERVER) then
 	function Clockwork.entity:BelongsToAnotherCharacter(player, entity)
 		local uniqueID = self:QueryProperty(entity, "uniqueID");
 		local key = self:QueryProperty(entity, "key");
-		
-		if (uniqueID and key) then
-			if (uniqueID == player:UniqueID() and key != player:GetCharacterKey()) then
-				return true;
-			end;
+
+		if (uniqueID and key) and (uniqueID == player:UniqueID() and key != player:GetCharacterKey()) then
+			return true;
 		end;
-		
+
 		return false;
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to set a property variable for an entity.
@@ -1663,7 +1661,7 @@ if (SERVER) then
 	function Clockwork.entity:SetPropertyVar(entity, key, value)
 		if (entity.cwPropertyTab) then entity.cwPropertyTab[key] = value; end;
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to query an entity's property table.
@@ -1679,7 +1677,7 @@ if (SERVER) then
 			return default;
 		end;
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to clear an entity as property.
@@ -1693,7 +1691,7 @@ if (SERVER) then
 		elseif (self:HasOwner(entity)) then
 			local uniqueID = self:QueryProperty(entity, "uniqueID");
 			local key = self:QueryProperty(entity, "key");
-			
+
 			Clockwork.player:TakePropertyOffline(key, uniqueID, entity);
 		end;
 	end;
@@ -1707,7 +1705,7 @@ if (SERVER) then
 	function Clockwork.entity:HasOwner(entity)
 		return self:QueryProperty(entity, "owned");
 	end;
-	
+
 	--[[
 		@codebase Server
 		@details A function to get an entity's owner.
@@ -1718,7 +1716,7 @@ if (SERVER) then
 	function Clockwork.entity:GetOwner(entity, bAnyCharacter)
 		local owner = self:QueryProperty(entity, "owner");
 		local key = self:QueryProperty(entity, "key");
-		
+
 		if (IsValid(owner) and (bAnyCharacter or owner:GetCharacterKey() == key)) then
 			return owner;
 		end;
@@ -1736,35 +1734,35 @@ else
 		local subtract = math.ceil(color.a / seconds);
 		local index = tostring({});
 		local alpha = color.a;
-		
+
 		if (!entity.cwIsDecaying) then
 			entity.cwIsDecaying = index;
 		end;
-		
+
 		entity:SetRenderMode(RENDERMODE_TRANSALPHA);
 		index = entity.cwIsDecaying;
-		
-		Clockwork.kernel:CreateTimer("Decay"..index, 1, 0, function()
+
+		Clockwork.kernel:CreateTimer("Decay" .. index, 1, 0, function()
 			alpha = alpha - subtract;
-			
+
 			if (IsValid(entity)) then
-				local color = entity:GetColor();
+				color = entity:GetColor();
 				local decayed = math.Clamp(math.ceil(alpha), 0, 255);
-				
+
 				if (color.a <= 0) then
 					if (Callback) then Callback(); end;
-					
+
 					entity:Remove();
-					Clockwork.kernel:DestroyTimer("Decay"..index);
+					Clockwork.kernel:DestroyTimer("Decay" .. index);
 				else
 					entity:SetColor(Color(color.r, color.g, color.b, decayed));
 				end;
 			else
-				Clockwork.kernel:DestroyTimer("Decay"..index);
+				Clockwork.kernel:DestroyTimer("Decay" .. index);
 			end;
 		end);
 	end;
-	
+
 	--[[ 
 		Description: A function to calculate a door's text position.
 		Author: Nori (thanks a lot mate, if you're reading this, check out
@@ -1782,28 +1780,28 @@ else
 		local obbCenter = door:OBBCenter();
 		local obbMaxs = door:OBBMaxs();
 		local obbMins = door:OBBMins();
-		
+
 		traceData.endpos = door:LocalToWorld(obbCenter);
 		traceData.filter = ents.FindInSphere(traceData.endpos, 20);
-		
+
 		for k, v in pairs(traceData.filter) do
 			if (v == door) then
 				traceData.filter[k] = nil;
 			end;
 		end;
-		
+
 		local length = 0;
 		local width = 0;
 		local size = obbMins - obbMaxs;
-		
+
 		size.x = math.abs(size.x);
 		size.y = math.abs(size.y);
 		size.z = math.abs(size.z);
-		
+
 		if (size.z < size.x and size.z < size.y) then
 			length = size.z;
 			width = size.y;
-			
+
 			if (reverse) then
 				traceData.start = traceData.endpos - (door:GetUp() * length);
 			else
@@ -1812,7 +1810,7 @@ else
 		elseif (size.x < size.y) then
 			length = size.x;
 			width = size.y;
-			
+
 			if (reverse) then
 				traceData.start = traceData.endpos - (door:GetForward() * length);
 			else
@@ -1821,32 +1819,32 @@ else
 		elseif (size.y < size.x) then
 			length = size.y;
 			width = size.x;
-			
+
 			if (reverse) then
 				traceData.start = traceData.endpos - (door:GetRight() * length);
 			else
-			
+
 				traceData.start = traceData.endpos + (door:GetRight() * length);
 			end;
 		end;
 
 		local trace = util.TraceLine(traceData);
 		local angles = trace.HitNormal:Angle();
-		
+
 		if (trace.HitWorld and !reversed) then
 			return self:CalculateDoorTextPosition(door, true);
 		end;
-		
+
 		angles:RotateAroundAxis(angles:Forward(), 90);
 		angles:RotateAroundAxis(angles:Right(), 90);
-		
+
 		local position = trace.HitPos - (((traceData.endpos - trace.HitPos):Length() * 2) + 2) * trace.HitNormal;
 		local anglesBack = trace.HitNormal:Angle();
 		local positionBack = trace.HitPos + (trace.HitNormal * 2);
-		
+
 		anglesBack:RotateAroundAxis(anglesBack:Forward(), 90);
 		anglesBack:RotateAroundAxis(anglesBack:Right(), -90);
-		
+
 		return {
 			positionBack = positionBack,
 			anglesBack = anglesBack,
@@ -1856,7 +1854,7 @@ else
 			width = math.abs(width)
 		};
 	end;
-	
+
 	--[[
 		@codebase Client
 		@details A function to force a menu option.
@@ -1867,7 +1865,7 @@ else
 	function Clockwork.entity:ForceMenuOption(entity, option, arguments)
 		Clockwork.datastream:Start("EntityMenuOption", {entity, option, arguments});
 	end;
-	
+
 	--[[
 		@codebase Client
 		@details A function to get whether an entity has an owner.
@@ -1877,7 +1875,7 @@ else
 	function Clockwork.entity:HasOwner(entity)
 		return entity:GetNetworkedBool("Owned");
 	end;
-	
+
 	--[[
 		@codebase Client
 		@details A function to get an entity's owner.
@@ -1888,7 +1886,7 @@ else
 	function Clockwork.entity:GetOwner(entity, bAnyCharacter)
 		local owner = entity:GetNetworkedEntity("Owner");
 		local key = entity:GetNetworkedInt("Key");
-		
+
 		if (IsValid(owner) and (bAnyCharacter or Clockwork.player:GetCharacterKey(owner) == key)) then
 			return owner;
 		end;

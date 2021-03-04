@@ -21,25 +21,25 @@ end;
 
 function MYSQL_UPDATE_CLASS:SetValue(key, value)
 	if (Clockwork.NoMySQL) then return self; end;
-		self.updateVars[key] = "\""..Clockwork.database:Escape(tostring(value)).."\"";
+		self.updateVars[key] = "\"" .. Clockwork.database:Escape(tostring(value)) .. "\"";
 	return self;
 end;
 
 function MYSQL_UPDATE_CLASS:Replace(key, search, replace)
 	if (Clockwork.NoMySQL) then return self; end;
-	
-	search = "\""..Clockwork.database:Escape(tostring(search)).."\"";
-	replace = "\""..Clockwork.database:Escape(tostring(replace)).."\"";
-	self.updateVars[key] = "REPLACE("..key..", "..search..", "..replace..")";
-	
+
+	search = "\"" .. Clockwork.database:Escape(tostring(search)) .. "\"";
+	replace = "\"" .. Clockwork.database:Escape(tostring(replace)) .. "\"";
+	self.updateVars[key] = "REPLACE(" .. key .. ", " .. search .. ", " .. replace .. ")";
+
 	return self;
 end;
 
 function MYSQL_UPDATE_CLASS:AddWhere(key, value)
 	if (Clockwork.NoMySQL) then return self; end;
-	
+
 	value = Clockwork.database:Escape(tostring(value));
-		self.updateWhere[#self.updateWhere + 1] = string.gsub(key, '?', "\""..value.."\"");
+		self.updateWhere[#self.updateWhere + 1] = string.gsub(key, '?', "\"" .. value .. "\"");
 	return self;
 end;
 
@@ -56,29 +56,29 @@ end;
 function MYSQL_UPDATE_CLASS:Push()
 	if (Clockwork.NoMySQL) then return; end;
 	if (!self.tableName) then return; end;
-	
+
 	local updateQuery = "";
-	
+
 	for k, v in pairs(self.updateVars) do
 		if (updateQuery == "") then
-			updateQuery = "UPDATE "..self.tableName.." SET "..k.." = "..v;
+			updateQuery = "UPDATE " .. self.tableName .. " SET " .. k .. " = " .. v;
 		else
-			updateQuery = updateQuery..", "..k.." = "..v;
+			updateQuery = updateQuery .. ", " .. k .. " = " .. v;
 		end;
 	end;
-	
+
 	if (updateQuery == "") then return; end;
-	
+
 	local whereTable = {};
-	
+
 	for k, v in pairs(self.updateWhere) do
 		whereTable[#whereTable + 1] = v;
 	end;
-	
+
 	local whereString = table.concat(whereTable, " AND ");
-	
+
 	if (whereString != "") then
-		Clockwork.database:Query(updateQuery.." WHERE "..whereString, self.Callback, self.Flag);
+		Clockwork.database:Query(updateQuery .. " WHERE " .. whereString, self.Callback, self.Flag);
 	else
 		Clockwork.database:Query(updateQuery, self.Callback, self.Flag);
 	end;
@@ -109,19 +109,19 @@ end;
 function MYSQL_INSERT_CLASS:Push()
 	if (Clockwork.NoMySQL) then return; end;
 	if (!self.tableName) then return; end;
-	
+
 	local keyList = {};
 	local valueList = {};
-	
+
 	for k, v in pairs(self.insertVars) do
 		keyList[#keyList + 1] = k;
-		valueList[#valueList + 1] = "\""..Clockwork.database:Escape(tostring(v)).."\"";
+		valueList[#valueList + 1] = "\"" .. Clockwork.database:Escape(tostring(v)) .. "\"";
 	end;
-	
+
 	if (#keyList == 0) then return; end;
-	
-	local insertQuery = "INSERT INTO "..self.tableName.." ("..table.concat(keyList, ", ")..")";
-		insertQuery = insertQuery.." VALUES("..table.concat(valueList, ", ")..")";
+
+	local insertQuery = "INSERT INTO " .. self.tableName .. " (" .. table.concat(keyList, ", ") .. ")";
+		insertQuery = insertQuery .. " VALUES(" .. table.concat(valueList, ", ") .. ")";
 	Clockwork.database:Query(insertQuery, self.Callback, self.Flag);
 end;
 
@@ -139,9 +139,9 @@ end;
 
 function MYSQL_SELECT_CLASS:AddWhere(key, value)
 	if (Clockwork.NoMySQL) then return self; end;
-	
+
 	value = Clockwork.database:Escape(tostring(value));
-		self.selectWhere[#self.selectWhere + 1] = string.gsub(key, '?', "\""..value.."\"");
+		self.selectWhere[#self.selectWhere + 1] = string.gsub(key, '?', "\"" .. value .. "\"");
 	return self;
 end;
 
@@ -156,35 +156,35 @@ function MYSQL_SELECT_CLASS:SetFlag(value)
 end;
 
 function MYSQL_SELECT_CLASS:SetOrder(key, value)
-	self.Order = key.." "..value;
+	self.Order = key .. " " .. value;
 	return self;
 end;
 
 function MYSQL_SELECT_CLASS:Pull()
 	if (Clockwork.NoMySQL) then return; end;
 	if (!self.tableName) then return; end;
-	
+
 	if (#self.selectColumns == 0) then
 		self.selectColumns[#self.selectColumns + 1] = "*";
 	end;
-	
-	local selectQuery = "SELECT "..table.concat(self.selectColumns, ", ").." FROM "..self.tableName;
+
+	local selectQuery = "SELECT " .. table.concat(self.selectColumns, ", ") .. " FROM " .. self.tableName;
 	local whereTable = {};
-	
+
 	for k, v in pairs(self.selectWhere) do
 		whereTable[#whereTable + 1] = v;
 	end;
-	
+
 	local whereString = table.concat(whereTable, " AND ");
-	
+
 	if (whereString != "") then
-		selectQuery = selectQuery.." WHERE "..whereString;
+		selectQuery = selectQuery .. " WHERE " .. whereString;
 	end;
-	
+
 	if (self.selectOrder != "") then
-		selectQuery = selectQuery.." ORDER BY "..self.selectOrder;
+		selectQuery = selectQuery .. " ORDER BY " .. self.selectOrder;
 	end;
-	
+
 	Clockwork.database:Query(selectQuery, self.Callback, self.Flag);
 end;
 
@@ -197,9 +197,9 @@ end;
 
 function MYSQL_DELETE_CLASS:AddWhere(key, value)
 	if (Clockwork.NoMySQL) then return self; end;
-	
+
 	value = Clockwork.database:Escape(tostring(value));
-		self.deleteWhere[#self.deleteWhere + 1] = string.gsub(key, '?', "\""..value.."\"");
+		self.deleteWhere[#self.deleteWhere + 1] = string.gsub(key, '?', "\"" .. value .. "\"");
 	return self;
 end;
 
@@ -216,18 +216,18 @@ end;
 function MYSQL_DELETE_CLASS:Push()
 	if (Clockwork.NoMySQL) then return; end;
 	if (!self.tableName) then return; end;
-	
-	local deleteQuery = "DELETE FROM "..self.tableName;
+
+	local deleteQuery = "DELETE FROM " .. self.tableName;
 	local whereTable = {};
-	
+
 	for k, v in pairs(self.deleteWhere) do
 		whereTable[#whereTable + 1] = v;
 	end;
-	
+
 	local whereString = table.concat(whereTable, " AND ");
-	
+
 	if (whereString != "") then
-		Clockwork.database:Query(deleteQuery.." WHERE "..whereString, self.Callback, self.Flag);
+		Clockwork.database:Query(deleteQuery .. " WHERE " .. whereString, self.Callback, self.Flag);
 	else
 		Clockwork.database:Query(deleteQuery, self.Callback, self.Flag);
 	end;
@@ -271,86 +271,86 @@ function Clockwork.database:Query(query, Callback, flag, bRawQuery)
 		MsgN("[Clockwork] Cannot run a database query with no connection!");
 		return;
 	end;
-	
+
 	if (self.MDB) then
 		local sqlObject = self.MDB:query(query);
-		
+
 		sqlObject:setOption(mysqloo.OPTION_NAMED_FIELDS);
- 
-		function sqlObject.onSuccess(sqlObject, data)
+
+		function sqlObject:onSuccess(data)
 			if (Callback and !bRawQuery) then
-				Callback(data, sqlObject:lastInsert());
+				Callback(data, self:lastInsert());
 			end;
 		end;
-		
-		function sqlObject.onError(sqlObject, errorText)
+
+		function sqlObject.onError(_, errorText)
 			local databaseStatus = self.MDB:status();
 
 			if (databaseStatus == mysqloo.DATABASE_NOT_CONNECTED) then
 				table.insert(self.runQueue, {query, Callback, bRawQuery});
 				self.MDB:connect();
 			end;
-			
+
 			if (errorText) then
 				MsgN(errorText);
 			end;
 		end;
-	 
+
 		sqlObject:start();
-		
+
 		return;
 	end;
-	
+
 	if (!bRawQuery) then
 		if (self.liteSql) then
 			local data = sql.Query(query);
 			local lastError = sql.LastError();
-			
+
 			if (lastError) then
 				MsgN(query);
 				MsgN(lastError);
 			end;
-			
+
 			if (data == false) then
 				Clockwork.database:Error(lastError);
 				return;
 			end;
-			
+
 			if (Callback) then
 				Callback(data, lastError, tonumber(sql.QueryValue("SELECT last_insert_rowid()")))
 			end
 		else
 			tmysql.query(query, function(result, status, text, other)
-				--MsgN("[Clockwork] Result: "..tostring(result).." Status: "..tostring(status).." Text: "..tostring(text).." Other: "..tostring(other));
-				
+				--MsgN("[Clockwork] Result: " .. tostring(result) .. " Status: " .. tostring(status) .. " Text: " .. tostring(text) .. " Other: " .. tostring(other));
+
 				if (Callback) then
 					Callback(result, status, text);
 				end;
-			end, (flag or 1));
+			end, flag or 1);
 		end;
 	elseif (self.liteSql) then
 		local data = sql.Query(query);
-		
+
 		if (data == false) then
 			MsgN(query);
 			MsgN(sql.LastError());
 		end;
 	else
 		tmysql.query(query, function(result, status, text, other)
-			--MsgN("[Clockwork] Result: "..tostring(result).." Status: "..tostring(status).." Text: "..tostring(text).." Other: "..tostring(other));
+			--MsgN("[Clockwork] Result: " .. tostring(result) .. " Status: " .. tostring(status) .. " Text: " .. tostring(text) .. " Other: " .. tostring(other));
 		end);
 	end;
 end;
 
 function Clockwork.database:IsResult(result)
-	return (result and type(result) == "table" and #result > 0);
+	return result and type(result) == "table" and #result > 0;
 end;
 
 function Clockwork.database:Escape(text)
 	if (self.MDB) then
 		return self.MDB:escape(text);
 	elseif (self.liteSql) then
-	    local escapedText = string.Replace(text, '"', '""');
+	    local escapedText = string.Replace(text, "\"", "\"\"");
 		local nullPosition = string.find(escapedText, "\0");
 		local result;
 
@@ -368,7 +368,7 @@ end;
 
 function Clockwork.database:OnConnected()
 	local BANS_TABLE_QUERY = [[
-	CREATE TABLE IF NOT EXISTS `]]..Clockwork.config:Get("mysql_bans_table"):Get()..[[` (
+	CREATE TABLE IF NOT EXISTS `]] .. Clockwork.config:Get("mysql_bans_table"):Get() .. [[` (
 		`_Key` int(11) NOT NULL AUTO_INCREMENT,
 		`_Identifier` text NOT NULL,
 		`_UnbanTime` int(11) NOT NULL,
@@ -378,9 +378,9 @@ function Clockwork.database:OnConnected()
 		`_Schema` text NOT NULL,
 		PRIMARY KEY (`_Key`));
 	]];
-	
+
 	local LITE_BANS_TABLE_QUERY = [[
-	CREATE TABLE IF NOT EXISTS `]]..Clockwork.config:Get("mysql_bans_table"):Get()..[[` (
+	CREATE TABLE IF NOT EXISTS `]] .. Clockwork.config:Get("mysql_bans_table"):Get() .. [[` (
 		`_Key` INTEGER PRIMARY KEY AUTOINCREMENT,
 		`_Identifier` TEXT,
 		`_UnbanTime` INTEGER,
@@ -389,9 +389,9 @@ function Clockwork.database:OnConnected()
 		`_Reason` TEXT,
 		`_Schema` TEXT);
 	]];
-	
+
 	local CHARACTERS_TABLE_QUERY = [[
-	CREATE TABLE IF NOT EXISTS `]]..Clockwork.config:Get("mysql_characters_table"):Get()..[[` (
+	CREATE TABLE IF NOT EXISTS `]] .. Clockwork.config:Get("mysql_characters_table"):Get() .. [[` (
 		`_Key` smallint(11) NOT NULL AUTO_INCREMENT,
 		`_Data` text NOT NULL,
 		`_Name` varchar(150) NOT NULL,
@@ -413,9 +413,9 @@ function Clockwork.database:OnConnected()
 		`_RecognisedNames` text NOT NULL,
 		PRIMARY KEY (`_Key`));
 	]];
-	
+
 	local LITE_CHARACTERS_TABLE_QUERY = [[
-	CREATE TABLE IF NOT EXISTS `]]..Clockwork.config:Get("mysql_characters_table"):Get()..[[` (
+	CREATE TABLE IF NOT EXISTS `]] .. Clockwork.config:Get("mysql_characters_table"):Get() .. [[` (
 		`_Key` INTEGER PRIMARY KEY AUTOINCREMENT,
 		`_Data` TEXT,
 		`_Name` TEXT,
@@ -438,7 +438,7 @@ function Clockwork.database:OnConnected()
 	]];
 
 	local PLAYERS_TABLE_QUERY = [[
-	CREATE TABLE IF NOT EXISTS `]]..Clockwork.config:Get("mysql_players_table"):Get()..[[` (
+	CREATE TABLE IF NOT EXISTS `]] .. Clockwork.config:Get("mysql_players_table"):Get() .. [[` (
 		`_Key` smallint(11) NOT NULL AUTO_INCREMENT,
 		`_Data` text NOT NULL,
 		`_Schema` text NOT NULL,
@@ -452,9 +452,9 @@ function Clockwork.database:OnConnected()
 		`_TimeJoined` varchar(50) NOT NULL,
 		PRIMARY KEY (`_Key`));
 	]];
-	
+
 	local LITE_PLAYERS_TABLE_QUERY = [[
-	CREATE TABLE IF NOT EXISTS `]]..Clockwork.config:Get("mysql_players_table"):Get()..[[` (
+	CREATE TABLE IF NOT EXISTS `]] .. Clockwork.config:Get("mysql_players_table"):Get() .. [[` (
 		`_Key` INTEGER PRIMARY KEY AUTOINCREMENT,
 		`_Data` TEXT,
 		`_Schema` TEXT,
@@ -477,10 +477,10 @@ function Clockwork.database:OnConnected()
 		self:Query(string.gsub(CHARACTERS_TABLE_QUERY, "%s", " "), nil, nil, true);
 		self:Query(string.gsub(PLAYERS_TABLE_QUERY, "%s", " "), nil, nil, true);
 	end;
-	
+
 	Clockwork.NoMySQL = false;
 	Clockwork.plugin:Call("ClockworkDatabaseConnected");
-	
+
 	if (self.MDB) then
 		for k, v in pairs(self.runQueue) do
 			self:Query(v[1], v[2], nil, v[3]);
@@ -491,7 +491,7 @@ function Clockwork.database:OnConnected()
 end;
 
 function Clockwork.database:OnConnectionFailed(errText)
-	ErrorNoHalt("Clockwork::Database - "..errText.."\n");
+	ErrorNoHalt("Clockwork::Database - " .. errText .. "\n");
 
 	Clockwork.NoMySQL = errText;
 	Clockwork.plugin:Call("ClockworkDatabaseConnectionFailed", errText);
@@ -500,21 +500,21 @@ end;
 function Clockwork.database:Connect(host, username, password, database, port)
 	if (host == "example.com") then
 		ErrorNoHalt("[Clockwork] No MySQL details found. Connecting to database using SQLite...\n");
-		
+
 		self.liteSql = true;
 		self:OnConnected();
 		return;
 	end;
-	
+
 	if (host == "localhost") then
 		host = "127.0.0.1";
 	end;
-	
+
 	if (system.IsLinux() and mysqloo) then
 		self.MDB = mysqloo.connect(host, username, password, database, port);
-		
+
 		ErrorNoHalt("[Clockwork] Connecting to database using MySQLOO...\n");
-		
+
 		function self.MDB.onConnected(db)
 			Clockwork.database:OnConnected();
 		end;
@@ -522,21 +522,22 @@ function Clockwork.database:Connect(host, username, password, database, port)
 		function self.MDB.onConnectionFailed(db, errText)
 			Clockwork.database:OnConnectionFailed(errText);
 		end;
-		
+
 		self.MDB:connect();
-		
+
 		return;
 	end;
-	
-	local success, databaseConnection, errText = pcall(
+
+	local _, databaseConnection, errText = xpcall(
 		tmysql.initialize,
+		debug.traceback,
 		host,
 		username,
 		password,
 		database,
 		port
 	);
-	
+
 	ErrorNoHalt("[Clockwork] Connecting to database using tmysql4...\n");
 
 	if (databaseConnection) then

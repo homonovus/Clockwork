@@ -19,22 +19,22 @@ COMMAND.alias = {"Fallover"};
 -- Called when the command has been run.
 function COMMAND:OnRun(player, arguments)
 	local curTime = CurTime();
-	
+
 	if (!player.cwNextFallTime or curTime >= player.cwNextFallTime) then
 		player.cwNextFallTime = curTime + 5;
-		
+
 		if (!player:InVehicle() and !Clockwork.player:IsNoClipping(player)) then
 			local seconds = tonumber(arguments[1]);
-			
+
 			if (seconds) then
 				seconds = math.Clamp(seconds, 2, 30);
 			elseif (seconds == 0) then
 				seconds = nil;
 			end;
-			
+
 			if (!player:IsRagdolled()) then
 				Clockwork.player:SetRagdollState(player, RAGDOLL_FALLENOVER, seconds);
-				
+
 				player:SetSharedVar("FallenOver", true);
 			end;
 		else
