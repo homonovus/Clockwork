@@ -3174,7 +3174,7 @@ function Clockwork:RenderScreenspaceEffects()
 		};
 		local color = 1;
 		local isDrunk = cwPly:GetDrunk();
-		
+
 		if (!cwKernel:IsChoosingCharacter()) then
 			if (cwLimb:IsActive() and cwEvent:CanRun("blur", "limb_damage")) then
 				local headDamage = cwLimb:GetDamage(HITGROUP_HEAD);
@@ -3186,16 +3186,16 @@ function Clockwork:RenderScreenspaceEffects()
 					);
 				end;
 			end;
-			
+
 			if (cwClient:Alive()) then
 				color = math.Clamp(color - ((cwClient:GetMaxHealth() - cwClient:Health()) * 0.01), 0, color);
 			else
 				color = 0;
 			end;
-			
+
 			if (cwEvent:CanRun("blur", "isDrunk")) then
 				if (isDrunk and self.DrunkBlur) then
-					self.DrunkBlur = math.Clamp(self.DrunkBlur - (frameTime / 10), math.max(1 - (isDrunk / 8), 0.1), 1);					
+					self.DrunkBlur = math.Clamp(self.DrunkBlur - (frameTime / 10), math.max(1 - (isDrunk / 8), 0.1), 1);
 					DrawMotionBlur(self.DrunkBlur, 1, 0);
 				elseif (self.DrunkBlur and self.DrunkBlur < 1) then
 					self.DrunkBlur = math.Clamp(self.DrunkBlur + (frameTime / 10), 0.1, 1);
@@ -3205,7 +3205,7 @@ function Clockwork:RenderScreenspaceEffects()
 				end;
 			end;
 		end;
-		
+
 		if (self.FishEyeTexture and cwClient:WaterLevel() > 2) then
 			render.UpdateScreenEffectTexture();
 				self.FishEyeTexture:SetFloat("$envmap", 0);
@@ -3215,7 +3215,7 @@ function Clockwork:RenderScreenspaceEffects()
 			render.SetMaterial(self.FishEyeTexture);
 			render.DrawScreenQuad();
 		end;
-		
+
 		self.ColorModify["$pp_colour_brightness"] = 0;
 		self.ColorModify["$pp_colour_contrast"] = 1;
 		self.ColorModify["$pp_colour_colour"] = color;
@@ -3225,9 +3225,13 @@ function Clockwork:RenderScreenspaceEffects()
 		self.ColorModify["$pp_colour_mulr"] = 0;
 		self.ColorModify["$pp_colour_mulg"] = 0;
 		self.ColorModify["$pp_colour_mulb"] = 0;
-		
+
 		local systemTable = self.system:FindByID("ColorModify")
-		local overrideColorMod = systemTable:GetModifyTable();
+		local overrideColorMod
+
+		if (systemTable) then
+			systemTable:GetModifyTable();
+		end;
 
 		if (overrideColorMod and overrideColorMod.enabled) then
 			self.ColorModify["$pp_colour_brightness"] = overrideColorMod.brightness;
@@ -3242,24 +3246,24 @@ function Clockwork:RenderScreenspaceEffects()
 		else
 			cwPlugin:Call("PlayerSetDefaultColorModify", self.ColorModify);
 		end;
-		
+
 		cwPlugin:Call("PlayerAdjustColorModify", self.ColorModify);
 		cwPlugin:Call("PlayerAdjustMotionBlurs", motionBlurs);
-		
+
 		if (motionBlurs.enabled) then
 			local addAlpha = nil;
-			
+
 			for k, v in pairs(motionBlurs.blurTable) do
 				if (!addAlpha or v < addAlpha) then
 					addAlpha = v;
 				end;
 			end;
-			
+
 			if (addAlpha) then
 				DrawMotionBlur(math.Clamp(addAlpha, 0.1, 1), 1, 0);
 			end;
 		end;
-		
+
 		--[[
 			Hotfix for ColorModify issues on OS X.
 		--]]
@@ -3267,7 +3271,7 @@ function Clockwork:RenderScreenspaceEffects()
 			self.ColorModify["$pp_colour_brightness"] = 0;
 			self.ColorModify["$pp_colour_contrast"] = 1;
 		end;
-		
+
 		DrawColorModify(self.ColorModify);
 	end;
 end;
